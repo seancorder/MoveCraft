@@ -134,6 +134,11 @@ public class Movecraft extends JavaPlugin {
 		Settings.FireballLifespan = getConfig().getInt("FireballLifespan", 6);
 		Settings.FireballPenetration = getConfig().getBoolean("FireballPenetration", true);
 		Settings.BlockQueueChunkSize = getConfig().getInt("BlockQueueChunkSize", 1000);
+		Settings.FreeRepair = getConfig().getBoolean("FreeRepair", false);
+		logger.log(Level.INFO, "FreeRepair is set to {0}", Settings.FreeRepair);
+		Settings.MaintenanceAllow = getConfig().getBoolean("MaintenanceAllow", false);
+		logger.log(Level.INFO, "MaintenanceAllow is set to {0}", Settings.MaintenanceAllow);
+		Settings.ShipDetectCheckTicks = getConfig().getDouble("ShipDetectCheckTicks", 6000.00);
 		Settings.AllowCrewSigns = getConfig().getBoolean("AllowCrewSigns", true);
 		Settings.SetHomeToCrewSign = getConfig().getBoolean("SetHomeToCrewSign", true);
 		Settings.RequireCreatePerm = getConfig().getBoolean("RequireCreatePerm", false);
@@ -327,6 +332,7 @@ public class Movecraft extends JavaPlugin {
 			this.getCommand("manoverboard").setExecutor(new CommandListener());
 			this.getCommand("contacts").setExecutor(new CommandListener());
 			this.getCommand("siege").setExecutor(new CommandListener());
+			
 			
 			getServer().getPluginManager().registerEvents(new BlockListener(),
 					this);

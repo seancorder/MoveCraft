@@ -44,9 +44,13 @@ public class Settings {
 	public static int FadeWrecksAfter = 0;
 	public static int ManOverBoardTimeout = 60;
 	public static int FireballLifespan = 6;
+	public static boolean FreeRepair = false;
+	//SC: note sure what this should be
+	public static double ShipDetectCheckTicks = 6000.0;
 	public static int RepairTicksPerBlock = 0;
 	public static int BlockQueueChunkSize = 1000;
 	public static double RepairMoneyPerBlock = 0.0;
+	public static boolean MaintenanceAllow = true; //SC:  Added in, not sure how I'm going to implement yet.
 	public static boolean FireballPenetration = true;
 	public static boolean AllowCrewSigns = true;
 	public static boolean SetHomeToCrewSign = true;

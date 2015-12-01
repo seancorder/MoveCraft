@@ -54,9 +54,10 @@ public class Craft {
 	private int origBlockCount;
 	private double pilotLockedZ;
 	private Player notificationPlayer;
+	private String craftName;
 	private HashMap<Player, Long> movedPlayers = new HashMap<Player, Long>(); 
 	
-	public Craft( CraftType type, World world ) {
+	public Craft( CraftType type, World world, String cn ) {
 		this.type = type;
 		this.w = world;
 		this.blockList = new MovecraftLocation[1];
@@ -70,6 +71,7 @@ public class Craft {
 		this.pilotLockedY=0.0;
 		this.pilotLockedZ=0.0;
 		this.keepMoving=false;
+		this.craftName = cn;
 	}
 
 	public boolean isNotProcessing() {
@@ -434,6 +436,11 @@ public class Craft {
 	
 	public Player getNotificationPlayer() {
 		return notificationPlayer;
+	}
+	
+	public String getCraftname()
+	{
+		return craftName;
 	}
 	
 }

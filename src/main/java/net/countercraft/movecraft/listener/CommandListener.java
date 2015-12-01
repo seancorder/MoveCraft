@@ -53,342 +53,360 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 //public class CommandListener implements Listener {
 public class CommandListener implements CommandExecutor {
 
-	private CraftType getCraftTypeFromString( String s ) {
-		for ( CraftType t : CraftManager.getInstance().getCraftTypes() ) {
-			if ( s.equalsIgnoreCase( t.getCraftName() ) ) {
+	private CraftType getCraftTypeFromString(String s) {
+		for (CraftType t : CraftManager.getInstance().getCraftTypes()) {
+			if (s.equalsIgnoreCase(t.getCraftName())) {
 				return t;
 			}
 		}
 
 		return null;
 	}
-	
+
 	private Location getCraftTeleportPoint(Craft craft, World w) {
-		int maxDX=0;
-		int maxDZ=0;
-		int maxY=0;
-		int minY=32767;
-		for(int[][] i1 : craft.getHitBox()) {
+		int maxDX = 0;
+		int maxDZ = 0;
+		int maxY = 0;
+		int minY = 32767;
+		for (int[][] i1 : craft.getHitBox()) {
 			maxDX++;
-			if(i1!=null) {
-				int indexZ=0;
-				for(int[] i2 : i1) {
+			if (i1 != null) {
+				int indexZ = 0;
+				for (int[] i2 : i1) {
 					indexZ++;
-					if(i2!=null) {
-						if(i2[0]<minY) {
-							minY=i2[0];
+					if (i2 != null) {
+						if (i2[0] < minY) {
+							minY = i2[0];
 						}
 					}
-					if(i2!=null) {
-						if(i2[1]>maxY) {
-							maxY=i2[1];
+					if (i2 != null) {
+						if (i2[1] > maxY) {
+							maxY = i2[1];
 						}
 					}
 				}
-				if(indexZ>maxDZ) {
-					maxDZ=indexZ;
+				if (indexZ > maxDZ) {
+					maxDZ = indexZ;
 				}
-				
+
 			}
 		}
-		int telX=craft.getMinX()+(maxDX/2);
-		int telZ=craft.getMinZ()+(maxDZ/2);
-		int telY=maxY;
-		Location telPoint=new Location(w, telX, telY, telZ);
+		int telX = craft.getMinX() + (maxDX / 2);
+		int telZ = craft.getMinZ() + (maxDZ / 2);
+		int telY = maxY;
+		Location telPoint = new Location(w, telX, telY, telZ);
 		return telPoint;
 	}
-	
+
 	private MovecraftLocation getCraftMidPoint(Craft craft) {
-		int maxDX=0;
-		int maxDZ=0;
-		int maxY=0;
-		int minY=32767;
-		for(int[][] i1 : craft.getHitBox()) {
+		int maxDX = 0;
+		int maxDZ = 0;
+		int maxY = 0;
+		int minY = 32767;
+		for (int[][] i1 : craft.getHitBox()) {
 			maxDX++;
-			if(i1!=null) {
-				int indexZ=0;
-				for(int[] i2 : i1) {
+			if (i1 != null) {
+				int indexZ = 0;
+				for (int[] i2 : i1) {
 					indexZ++;
-					if(i2!=null) {
-						if(i2[0]<minY) {
-							minY=i2[0];
+					if (i2 != null) {
+						if (i2[0] < minY) {
+							minY = i2[0];
 						}
 					}
-					if(i2!=null) {
-						if(i2[1]<maxY) {
-							maxY=i2[1];
+					if (i2 != null) {
+						if (i2[1] < maxY) {
+							maxY = i2[1];
 						}
 					}
 				}
-				if(indexZ>maxDZ) {
-					maxDZ=indexZ;
+				if (indexZ > maxDZ) {
+					maxDZ = indexZ;
 				}
-				
+
 			}
 		}
-		int midX=craft.getMinX()+(maxDX/2);
-		int midY=(minY+maxY)/2;
-		int midZ=craft.getMinZ()+(maxDZ/2);
-		MovecraftLocation midPoint=new MovecraftLocation(midX, midY, midZ);
+		int midX = craft.getMinX() + (maxDX / 2);
+		int midY = (minY + maxY) / 2;
+		int midZ = craft.getMinZ() + (maxDZ / 2);
+		MovecraftLocation midPoint = new MovecraftLocation(midX, midY, midZ);
 		return midPoint;
 	}
-	
+
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-//	public void onCommand( PlayerCommandPreprocessEvent e ) {
-		
-		if(!(sender instanceof Player)) {
+		// public void onCommand( PlayerCommandPreprocessEvent e ) {
+
+		if (!(sender instanceof Player)) {
 			sender.sendMessage("This command can only be run by a player.");
 			return false;
 		}
-		
-		Player player=(Player) sender;
 
-		if ( cmd.getName().equalsIgnoreCase( "release" ) ) {
-			if ( !player.hasPermission( "movecraft.commands" ) && !player.hasPermission( "movecraft.commands.release" ) ) {
-				player.sendMessage( String.format( I18nSupport.getInternationalisedString( "Insufficient Permissions" ) ) );
+		Player player = (Player) sender;
+
+		if (cmd.getName().equalsIgnoreCase("release")) {
+			if (!player.hasPermission("movecraft.commands") && !player.hasPermission("movecraft.commands.release")) {
+				player.sendMessage(String.format(I18nSupport.getInternationalisedString("Insufficient Permissions")));
 				return true;
 			}
-			
-			final Craft pCraft = CraftManager.getInstance().getCraftByPlayerName( player.getName() );
 
-			if ( pCraft != null ) {
-				CraftManager.getInstance().removeCraft( pCraft );
-				//e.getPlayer().sendMessage( String.format( I18nSupport.getInternationalisedString( "Player- Craft has been released" ) ) );
+			final Craft pCraft = CraftManager.getInstance().getCraftByPlayerName(player.getName());
+
+			if (pCraft != null) {
+				CraftManager.getInstance().removeCraft(pCraft);
+				// e.getPlayer().sendMessage( String.format(
+				// I18nSupport.getInternationalisedString( "Player- Craft has
+				// been released" ) ) );
 			} else {
-				player.sendMessage( String.format( I18nSupport.getInternationalisedString( "Player- Error - You do not have a craft to release!" ) ) );
+				player.sendMessage(String.format(
+						I18nSupport.getInternationalisedString("Player- Error - You do not have a craft to release!")));
 			}
 
 			return true;
 		}
 
-		if ( cmd.getName().equalsIgnoreCase("pilot" ) ) {
-			if ( !player.hasPermission( "movecraft.commands" ) && !player.hasPermission( "movecraft.commands.pilot" ) ) {
-				player.sendMessage( String.format( I18nSupport.getInternationalisedString( "Insufficient Permissions" ) ) );
+		if (cmd.getName().equalsIgnoreCase("pilot")) {
+			if (!player.hasPermission("movecraft.commands") && !player.hasPermission("movecraft.commands.pilot")) {
+				player.sendMessage(String.format(I18nSupport.getInternationalisedString("Insufficient Permissions")));
 				return true;
 			}
-			
-			if(args.length>0) {
-				if ( player.hasPermission( "movecraft." + args[0] + ".pilot" ) ) {				
+
+			if (args.length > 0) {
+				if (player.hasPermission("movecraft." + args[0] + ".pilot")) {
 					MovecraftLocation startPoint = MathUtils.bukkit2MovecraftLoc(player.getLocation());
-					Craft c = new Craft( getCraftTypeFromString( args[0] ), player.getWorld() );
-		
-					if ( CraftManager.getInstance().getCraftByPlayerName( player.getName() ) == null ) {
-						c.detect( player, player, startPoint );
+					Craft c = new Craft(getCraftTypeFromString(args[0]), player.getWorld(), "");
+
+					if (CraftManager.getInstance().getCraftByPlayerName(player.getName()) == null) {
+						c.detect(player, player, startPoint);
 					} else {
-						Craft oldCraft=CraftManager.getInstance().getCraftByPlayerName( player.getName() );
-						CraftManager.getInstance().removeCraft( oldCraft );
-						c.detect( player, player, startPoint );
+						Craft oldCraft = CraftManager.getInstance().getCraftByPlayerName(player.getName());
+						CraftManager.getInstance().removeCraft(oldCraft);
+						c.detect(player, player, startPoint);
 					}
-		
+
 				} else {
-					player.sendMessage( String.format( I18nSupport.getInternationalisedString( "Insufficient Permissions" ) ) );
+					player.sendMessage(
+							String.format(I18nSupport.getInternationalisedString("Insufficient Permissions")));
 				}
 				return true;
 			}
 		}
-		
-		if( cmd.getName().equalsIgnoreCase("rotateleft")) {
-			if ( !player.hasPermission( "movecraft.commands" ) && !player.hasPermission( "movecraft.commands.rotateleft" ) ) {
-				player.sendMessage( String.format( I18nSupport.getInternationalisedString( "Insufficient Permissions" ) ) );
+
+		if (cmd.getName().equalsIgnoreCase("rotateleft")) {
+			if (!player.hasPermission("movecraft.commands") && !player.hasPermission("movecraft.commands.rotateleft")) {
+				player.sendMessage(String.format(I18nSupport.getInternationalisedString("Insufficient Permissions")));
 				return true;
 			}
-			
-			final Craft craft = CraftManager.getInstance().getCraftByPlayerName( player.getName() );
 
-			if ( player.hasPermission( "movecraft." + craft.getType().getCraftName() + ".rotate" ) ) {
+			final Craft craft = CraftManager.getInstance().getCraftByPlayerName(player.getName());
+
+			if (player.hasPermission("movecraft." + craft.getType().getCraftName() + ".rotate")) {
 				MovecraftLocation midPoint = getCraftMidPoint(craft);
-				CraftManager.getInstance().getCraftByPlayerName( player.getName() ).rotate( Rotation.ANTICLOCKWISE, midPoint );
+				CraftManager.getInstance().getCraftByPlayerName(player.getName()).rotate(Rotation.ANTICLOCKWISE,
+						midPoint);
 			} else {
-				player.sendMessage( String.format( I18nSupport.getInternationalisedString( "Insufficient Permissions" ) ) );				
+				player.sendMessage(String.format(I18nSupport.getInternationalisedString("Insufficient Permissions")));
 			}
-			
+
 			return true;
 		}
 
-		if(  cmd.getName().equalsIgnoreCase("rotateright")) {
-			if ( !player.hasPermission( "movecraft.commands" ) && !player.hasPermission( "movecraft.commands.rotateright" ) ) {
-				player.sendMessage( String.format( I18nSupport.getInternationalisedString( "Insufficient Permissions" ) ) );
+		if (cmd.getName().equalsIgnoreCase("rotateright")) {
+			if (!player.hasPermission("movecraft.commands")
+					&& !player.hasPermission("movecraft.commands.rotateright")) {
+				player.sendMessage(String.format(I18nSupport.getInternationalisedString("Insufficient Permissions")));
 				return true;
 			}
-			
-			final Craft craft = CraftManager.getInstance().getCraftByPlayerName( player.getName() );
 
-			if ( player.hasPermission( "movecraft." + craft.getType().getCraftName() + ".rotate" ) ) {
+			final Craft craft = CraftManager.getInstance().getCraftByPlayerName(player.getName());
+
+			if (player.hasPermission("movecraft." + craft.getType().getCraftName() + ".rotate")) {
 				MovecraftLocation midPoint = getCraftMidPoint(craft);
-				CraftManager.getInstance().getCraftByPlayerName( player.getName() ).rotate( Rotation.CLOCKWISE, midPoint );
+				CraftManager.getInstance().getCraftByPlayerName(player.getName()).rotate(Rotation.CLOCKWISE, midPoint);
 			} else {
-				player.sendMessage( String.format( I18nSupport.getInternationalisedString( "Insufficient Permissions" ) ) );				
+				player.sendMessage(String.format(I18nSupport.getInternationalisedString("Insufficient Permissions")));
 			}
-			
+
 			return true;
 		}
 
-		if( cmd.getName().equalsIgnoreCase("cruise")) {
-			if ( !player.hasPermission( "movecraft.commands" ) && !player.hasPermission( "movecraft.commands.cruise" ) ) {
-				player.sendMessage( String.format( I18nSupport.getInternationalisedString( "Insufficient Permissions" ) ) );
+		if (cmd.getName().equalsIgnoreCase("cruise")) {
+			if (!player.hasPermission("movecraft.commands") && !player.hasPermission("movecraft.commands.cruise")) {
+				player.sendMessage(String.format(I18nSupport.getInternationalisedString("Insufficient Permissions")));
 				return true;
 			}
-			
-			final Craft craft = CraftManager.getInstance().getCraftByPlayerName( player.getName() );
 
-			if ( player.hasPermission( "movecraft." + craft.getType().getCraftName() + ".move" ) ) {
-				if(craft.getType().getCanCruise()) {
-					if(args.length == 0) {
+			final Craft craft = CraftManager.getInstance().getCraftByPlayerName(player.getName());
+
+			if (player.hasPermission("movecraft." + craft.getType().getCraftName() + ".move")) {
+				if (craft.getType().getCanCruise()) {
+					if (args.length == 0) {
 						float yaw = player.getLocation().getYaw();
-						if(yaw >= 135 || yaw < -135) {
+						if (yaw >= 135 || yaw < -135) {
 							// north
-							craft.setCruiseDirection((byte)0x3);
+							craft.setCruiseDirection((byte) 0x3);
 							craft.setCruising(true);
-						} else if(yaw >= 45) {
+						} else if (yaw >= 45) {
 							// west
-							craft.setCruiseDirection((byte)0x5);
+							craft.setCruiseDirection((byte) 0x5);
 							craft.setCruising(true);
-						} else if(yaw < -45) {
+						} else if (yaw < -45) {
 							// south
-							craft.setCruiseDirection((byte)0x2);
+							craft.setCruiseDirection((byte) 0x2);
 							craft.setCruising(true);
 						} else {
 							// east
-							craft.setCruiseDirection((byte)0x4);
+							craft.setCruiseDirection((byte) 0x4);
 							craft.setCruising(true);
 						}
 						return true;
 					}
-					if(args[0].equalsIgnoreCase("north")) {
-						craft.setCruiseDirection((byte)0x3);
+					if (args[0].equalsIgnoreCase("north")) {
+						craft.setCruiseDirection((byte) 0x3);
 						craft.setCruising(true);
 					}
-					if(args[0].equalsIgnoreCase("south")) {
-						craft.setCruiseDirection((byte)0x2);
+					if (args[0].equalsIgnoreCase("south")) {
+						craft.setCruiseDirection((byte) 0x2);
 						craft.setCruising(true);
 					}
-					if(args[0].equalsIgnoreCase("east")) {
-						craft.setCruiseDirection((byte)0x4);
+					if (args[0].equalsIgnoreCase("east")) {
+						craft.setCruiseDirection((byte) 0x4);
 						craft.setCruising(true);
 					}
-					if(args[0].equalsIgnoreCase("west")) {
-						craft.setCruiseDirection((byte)0x5);
+					if (args[0].equalsIgnoreCase("west")) {
+						craft.setCruiseDirection((byte) 0x5);
 						craft.setCruising(true);
 					}
 				}
 			} else {
-				player.sendMessage( String.format( I18nSupport.getInternationalisedString( "Insufficient Permissions" ) ) );				
+				player.sendMessage(String.format(I18nSupport.getInternationalisedString("Insufficient Permissions")));
 			}
-			
+
 			return true;
 		}
 
-		if(cmd.getName().equalsIgnoreCase("cruiseoff")) {
-			final Craft craft = CraftManager.getInstance().getCraftByPlayerName( player.getName() );
-			if(craft!=null) {
+		if (cmd.getName().equalsIgnoreCase("cruiseoff")) {
+			final Craft craft = CraftManager.getInstance().getCraftByPlayerName(player.getName());
+			if (craft != null) {
 				craft.setCruising(false);
 			}
 			return true;
 		}
-		
-		if(cmd.getName().equalsIgnoreCase("craftreport")) {
-			if ( !player.hasPermission( "movecraft.commands" ) &&  !player.hasPermission( "movecraft.commands.craftreport" ) ) {
-				player.sendMessage( String.format( I18nSupport.getInternationalisedString( "Insufficient Permissions" ) ) );
+
+		if (cmd.getName().equalsIgnoreCase("craftreport")) {
+			if (!player.hasPermission("movecraft.commands")
+					&& !player.hasPermission("movecraft.commands.craftreport")) {
+				player.sendMessage(String.format(I18nSupport.getInternationalisedString("Insufficient Permissions")));
 				return true;
 			}
-			
-			boolean noCraftsFound=true;
-			if(CraftManager.getInstance().getCraftsInWorld(player.getWorld())!=null)
-				for(Craft craft : CraftManager.getInstance().getCraftsInWorld(player.getWorld())) {
-					if(craft!=null) {
-						String output=new String();
-						if(craft.getNotificationPlayer()!=null) {
-							output=craft.getType().getCraftName()+" "+craft.getNotificationPlayer().getName()+" "+craft.getBlockList().length+" @ "+craft.getMinX()+","+craft.getMinY()+","+craft.getMinZ();
+
+			boolean noCraftsFound = true;
+			if (CraftManager.getInstance().getCraftsInWorld(player.getWorld()) != null)
+				for (Craft craft : CraftManager.getInstance().getCraftsInWorld(player.getWorld())) {
+					if (craft != null) {
+						String output = new String();
+						if (craft.getNotificationPlayer() != null) {
+							//SC:  Add craft name here
+							output = craft.getType().getCraftName() + " " + craft.getCraftname() + " Captain: "+ craft.getNotificationPlayer().getName()
+									+ " " + craft.getBlockList().length + " @ " + craft.getMinX() + ","
+									+ craft.getMinY() + "," + craft.getMinZ();
 						} else {
-							output=craft.getType().getCraftName()+" NULL "+craft.getBlockList().length+" @ "+craft.getMinX()+","+craft.getMinY()+","+craft.getMinZ();
-							
+							output = craft.getType().getCraftName() + " " + craft.getCraftname() + " No Captain " + craft.getBlockList().length + " @ "
+									+ craft.getMinX() + "," + craft.getMinY() + "," + craft.getMinZ();
+
 						}
 						player.sendMessage(output);
-						noCraftsFound=false;
-					}				
+						noCraftsFound = false;
+					}
 				}
-			if(noCraftsFound) {
+			if (noCraftsFound) {
 				player.sendMessage("No crafts found");
 			}
 			return true;
 		}
-		
-		if(cmd.getName().equalsIgnoreCase("contacts")) {
-			if(CraftManager.getInstance().getCraftByPlayer(player)!=null ) {
-				Craft ccraft=CraftManager.getInstance().getCraftByPlayer(player);
-				boolean foundContact=false;
+
+		if (cmd.getName().equalsIgnoreCase("contacts")) {
+			if (CraftManager.getInstance().getCraftByPlayer(player) != null) {
+				Craft ccraft = CraftManager.getInstance().getCraftByPlayer(player);
+				boolean foundContact = false;
 				for (Craft tcraft : CraftManager.getInstance().getCraftsInWorld(ccraft.getW())) {
-					long cposx=ccraft.getMaxX()+ccraft.getMinX();
-					long cposy=ccraft.getMaxY()+ccraft.getMinY();
-					long cposz=ccraft.getMaxZ()+ccraft.getMinZ();
-					cposx=cposx>>1;
-					cposy=cposy>>1;
-					cposz=cposz>>1;
-					long tposx=tcraft.getMaxX()+tcraft.getMinX();
-					long tposy=tcraft.getMaxY()+tcraft.getMinY();
-					long tposz=tcraft.getMaxZ()+tcraft.getMinZ();
-					tposx=tposx>>1;
-					tposy=tposy>>1;
-					tposz=tposz>>1;
-					long diffx=cposx-tposx;
-					long diffy=cposy-tposy;
-					long diffz=cposz-tposz;
-					long distsquared=Math.abs(diffx)*Math.abs(diffx);
-					distsquared+=Math.abs(diffy)*Math.abs(diffy);
-					distsquared+=Math.abs(diffz)*Math.abs(diffz);
-					long detectionRange=0;
-					if(tposy>65) {
-						detectionRange=(long) (Math.sqrt(tcraft.getOrigBlockCount())*tcraft.getType().getDetectionMultiplier());
+					long cposx = ccraft.getMaxX() + ccraft.getMinX();
+					long cposy = ccraft.getMaxY() + ccraft.getMinY();
+					long cposz = ccraft.getMaxZ() + ccraft.getMinZ();
+					cposx = cposx >> 1;
+					cposy = cposy >> 1;
+					cposz = cposz >> 1;
+					long tposx = tcraft.getMaxX() + tcraft.getMinX();
+					long tposy = tcraft.getMaxY() + tcraft.getMinY();
+					long tposz = tcraft.getMaxZ() + tcraft.getMinZ();
+					tposx = tposx >> 1;
+					tposy = tposy >> 1;
+					tposz = tposz >> 1;
+					long diffx = cposx - tposx;
+					long diffy = cposy - tposy;
+					long diffz = cposz - tposz;
+					long distsquared = Math.abs(diffx) * Math.abs(diffx);
+					distsquared += Math.abs(diffy) * Math.abs(diffy);
+					distsquared += Math.abs(diffz) * Math.abs(diffz);
+					long detectionRange = 0;
+					if (tposy > 65) {
+						detectionRange = (long) (Math.sqrt(tcraft.getOrigBlockCount())
+								* tcraft.getType().getDetectionMultiplier());
 					} else {
-						detectionRange=(long) (Math.sqrt(tcraft.getOrigBlockCount())*tcraft.getType().getUnderwaterDetectionMultiplier());
+						detectionRange = (long) (Math.sqrt(tcraft.getOrigBlockCount())
+								* tcraft.getType().getUnderwaterDetectionMultiplier());
 					}
-					if(distsquared<detectionRange*detectionRange && tcraft.getNotificationPlayer()!=ccraft.getNotificationPlayer()) {
-						// craft has been detected				
-						foundContact=true;
-						String notification="Contact: ";
-						notification+=tcraft.getType().getCraftName();
-						notification+=" commanded by ";
-						notification+=tcraft.getNotificationPlayer().getDisplayName();
-						notification+=", size: ";
-						notification+=tcraft.getOrigBlockCount();
-						notification+=", range: ";
-						notification+=(int)Math.sqrt(distsquared);
-						notification+=" to the";
-						if(Math.abs(diffx) > Math.abs(diffz))
-							if(diffx<0)
-								notification+=" east.";
+					if (distsquared < detectionRange * detectionRange
+							&& tcraft.getNotificationPlayer() != ccraft.getNotificationPlayer()) {
+						// craft has been detected
+						foundContact = true;
+						String notification = "Contact: ";
+						notification += tcraft.getType().getCraftName();
+						notification += " commanded by ";
+						notification += tcraft.getNotificationPlayer().getDisplayName();
+						notification += ", size: ";
+						notification += tcraft.getOrigBlockCount();
+						notification += ", range: ";
+						notification += (int) Math.sqrt(distsquared);
+						notification += " to the";
+						if (Math.abs(diffx) > Math.abs(diffz))
+							if (diffx < 0)
+								notification += " east.";
 							else
-								notification+=" west.";
+								notification += " west.";
+						else if (diffz < 0)
+							notification += " south.";
 						else
-							if(diffz<0)
-								notification+=" south.";
-							else
-								notification+=" north.";
-							
+							notification += " north.";
+
 						ccraft.getNotificationPlayer().sendMessage(notification);
 					}
 				}
-				if(!foundContact)
-					player.sendMessage( String.format( I18nSupport.getInternationalisedString( "No contacts within range" ) ) );
-				return true;	
+				if (!foundContact)
+					player.sendMessage(
+							String.format(I18nSupport.getInternationalisedString("No contacts within range")));
+				return true;
 			} else {
-				player.sendMessage( String.format( I18nSupport.getInternationalisedString( "You must be piloting a craft" ) ) );
-				return true;	
+				player.sendMessage(
+						String.format(I18nSupport.getInternationalisedString("You must be piloting a craft")));
+				return true;
 			}
-				
+
 		}
-		
-		if(cmd.getName().equalsIgnoreCase("manOverBoard")) {
-			if(CraftManager.getInstance().getCraftByPlayerName(player.getName())!=null) {
-				Location telPoint = getCraftTeleportPoint(CraftManager.getInstance().getCraftByPlayerName(player.getName()), CraftManager.getInstance().getCraftByPlayerName(player.getName()).getW());
+
+		if (cmd.getName().equalsIgnoreCase("manOverBoard")) {
+			if (CraftManager.getInstance().getCraftByPlayerName(player.getName()) != null) {
+				Location telPoint = getCraftTeleportPoint(
+						CraftManager.getInstance().getCraftByPlayerName(player.getName()),
+						CraftManager.getInstance().getCraftByPlayerName(player.getName()).getW());
 				player.teleport(telPoint);
 			} else {
-				for(World w : Bukkit.getWorlds()) {
-					if(CraftManager.getInstance().getCraftsInWorld( w )!=null)
-						for(Craft tcraft : CraftManager.getInstance().getCraftsInWorld( w )) {
-							if(tcraft.getMovedPlayers().containsKey(player))
-								if((System.currentTimeMillis()-tcraft.getMovedPlayers().get(player))/1000<Settings.ManOverBoardTimeout) {
+				for (World w : Bukkit.getWorlds()) {
+					if (CraftManager.getInstance().getCraftsInWorld(w) != null)
+						for (Craft tcraft : CraftManager.getInstance().getCraftsInWorld(w)) {
+							if (tcraft.getMovedPlayers().containsKey(player))
+								if ((System.currentTimeMillis() - tcraft.getMovedPlayers().get(player))
+										/ 1000 < Settings.ManOverBoardTimeout) {
 									Location telPoint = getCraftTeleportPoint(tcraft, w);
 									player.teleport(telPoint);
 								}
@@ -398,115 +416,136 @@ public class CommandListener implements CommandExecutor {
 			return true;
 		}
 		
-		if(cmd.getName().equalsIgnoreCase("siege")) {
-			if(!player.hasPermission( "movecraft.siege" )) {
-				player.sendMessage( String.format( I18nSupport.getInternationalisedString( "Insufficient Permissions" ) ) );
+		if (cmd.getName().equalsIgnoreCase("siege")) {
+			if (!player.hasPermission("movecraft.siege")) {
+				player.sendMessage(String.format(I18nSupport.getInternationalisedString("Insufficient Permissions")));
 				return true;
 			}
-			if(Settings.SiegeName==null) {
-				player.sendMessage( String.format( I18nSupport.getInternationalisedString( "Siege is not configured on this server" ) ) );
+			if (Settings.SiegeName == null) {
+				player.sendMessage(String
+						.format(I18nSupport.getInternationalisedString("Siege is not configured on this server")));
 				return true;
 			}
-			if(Movecraft.getInstance().siegeInProgress==true) {
-				player.sendMessage( String.format( I18nSupport.getInternationalisedString( "A Siege is already taking place" ) ) );
+			if (Movecraft.getInstance().siegeInProgress == true) {
+				player.sendMessage(
+						String.format(I18nSupport.getInternationalisedString("A Siege is already taking place")));
 				return true;
 			}
-			String foundSiegeName=null;
-            LocalPlayer lp = (LocalPlayer) Movecraft.getInstance().getWorldGuardPlugin().wrapPlayer(player);
-            ApplicableRegionSet regions = Movecraft.getInstance().getWorldGuardPlugin().getRegionManager(player.getWorld()).getApplicableRegions(player.getLocation());
-            if (regions.size() != 0){
-            	for(ProtectedRegion tRegion : regions.getRegions()) {
-            		for(String tSiegeName : Settings.SiegeName) {
-            			if(tRegion.getId().equalsIgnoreCase(Settings.SiegeRegion.get(tSiegeName)))
-            				foundSiegeName=tSiegeName;
-            		}
-                }
-            }
-            if(foundSiegeName!=null) {
-            	long cost=Settings.SiegeCost.get(foundSiegeName);
-            	int numControlledSieges=0;
-            	for(String tSiegeName : Settings.SiegeName) {
-            		ProtectedRegion tregion = Movecraft.getInstance().getWorldGuardPlugin().getRegionManager(player.getWorld()).getRegion(Settings.SiegeControlRegion.get(tSiegeName) );
-            		if(tregion.getOwners().contains(player.getName())) {
-            			numControlledSieges++;
-            			cost=cost*2;
-            		}
-            	}
+			String foundSiegeName = null;
+			LocalPlayer lp = (LocalPlayer) Movecraft.getInstance().getWorldGuardPlugin().wrapPlayer(player);
+			ApplicableRegionSet regions = Movecraft.getInstance().getWorldGuardPlugin()
+					.getRegionManager(player.getWorld()).getApplicableRegions(player.getLocation());
+			if (regions.size() != 0) {
+				for (ProtectedRegion tRegion : regions.getRegions()) {
+					for (String tSiegeName : Settings.SiegeName) {
+						if (tRegion.getId().equalsIgnoreCase(Settings.SiegeRegion.get(tSiegeName)))
+							foundSiegeName = tSiegeName;
+					}
+				}
+			}
+			if (foundSiegeName != null) {
+				long cost = Settings.SiegeCost.get(foundSiegeName);
+				int numControlledSieges = 0;
+				for (String tSiegeName : Settings.SiegeName) {
+					ProtectedRegion tregion = Movecraft.getInstance().getWorldGuardPlugin()
+							.getRegionManager(player.getWorld()).getRegion(Settings.SiegeControlRegion.get(tSiegeName));
+					if (tregion.getOwners().contains(player.getName())) {
+						numControlledSieges++;
+						cost = cost * 2;
+					}
+				}
 
-            	if(Movecraft.getInstance().getEconomy().has(player, cost)) {
-            		Calendar rightNow = Calendar.getInstance();
-            		int hour = rightNow.get(Calendar.HOUR_OF_DAY);
-            		int minute = rightNow.get(Calendar.MINUTE);
-            		int currMilitaryTime=hour*100+minute;
-            		if((currMilitaryTime>Settings.SiegeScheduleStart.get(foundSiegeName))&&(currMilitaryTime<Settings.SiegeScheduleEnd.get(foundSiegeName))) {
-            			Bukkit.getServer().broadcastMessage(String.format("%s is preparing to siege %s! All players wishing to participate in the defense should head there immediately! Siege will begin in %d minutes"
-            						, player.getDisplayName(), foundSiegeName, Settings.SiegeDelay.get(foundSiegeName) / 60));
-                        for(Player p : Bukkit.getOnlinePlayers()) {
-                            p.playSound(p.getLocation(), Sound.WITHER_DEATH, 1, 0);
-                        }
-                        final String taskPlayerDisplayName=player.getDisplayName();
-                        final String taskPlayerName=player.getName();
-                        final String taskSiegeName=foundSiegeName;
-                        BukkitTask warningtask1 = new BukkitRunnable() {
+				if (Movecraft.getInstance().getEconomy().has(player, cost)) {
+					Calendar rightNow = Calendar.getInstance();
+					int hour = rightNow.get(Calendar.HOUR_OF_DAY);
+					int minute = rightNow.get(Calendar.MINUTE);
+					int currMilitaryTime = hour * 100 + minute;
+					if ((currMilitaryTime > Settings.SiegeScheduleStart.get(foundSiegeName))
+							&& (currMilitaryTime < Settings.SiegeScheduleEnd.get(foundSiegeName))) {
+						Bukkit.getServer().broadcastMessage(String.format(
+								"%s is preparing to siege %s! All players wishing to participate in the defense should head there immediately! Siege will begin in %d minutes",
+								player.getDisplayName(), foundSiegeName, Settings.SiegeDelay.get(foundSiegeName) / 60));
+						for (Player p : Bukkit.getOnlinePlayers()) {
+							p.playSound(p.getLocation(), Sound.WITHER_DEATH, 1, 0);
+						}
+						final String taskPlayerDisplayName = player.getDisplayName();
+						final String taskPlayerName = player.getName();
+						final String taskSiegeName = foundSiegeName;
+						BukkitTask warningtask1 = new BukkitRunnable() {
 							@Override
 							public void run() {
-								Bukkit.getServer().broadcastMessage(String.format("%s is preparing to siege %s! All players wishing to participate in the defense should head there immediately! Siege will begin in %d minutes"
-	            						, taskPlayerDisplayName, taskSiegeName, (Settings.SiegeDelay.get(taskSiegeName) / 60) / 4 * 3));
-		                        for(Player p : Bukkit.getOnlinePlayers()) {
-		                            p.playSound(p.getLocation(), Sound.WITHER_DEATH, 1, 0);
-		                        }
+								Bukkit.getServer()
+										.broadcastMessage(String.format(
+												"%s is preparing to siege %s! All players wishing to participate in the defense should head there immediately! Siege will begin in %d minutes",
+												taskPlayerDisplayName, taskSiegeName,
+												(Settings.SiegeDelay.get(taskSiegeName) / 60) / 4 * 3));
+								for (Player p : Bukkit.getOnlinePlayers()) {
+									p.playSound(p.getLocation(), Sound.WITHER_DEATH, 1, 0);
+								}
 							}
-						}.runTaskLater( Movecraft.getInstance(), ( 20 * Settings.SiegeDelay.get(taskSiegeName ) / 4 * 1 ));
-                        BukkitTask warningtask2 = new BukkitRunnable() {
+						}.runTaskLater(Movecraft.getInstance(), (20 * Settings.SiegeDelay.get(taskSiegeName) / 4 * 1));
+						BukkitTask warningtask2 = new BukkitRunnable() {
 							@Override
 							public void run() {
-								Bukkit.getServer().broadcastMessage(String.format("%s is preparing to siege %s! All players wishing to participate in the defense should head there immediately! Siege will begin in %d minutes"
-	            						, taskPlayerDisplayName, taskSiegeName, (Settings.SiegeDelay.get(taskSiegeName) / 60) / 4 * 2));
-		                        for(Player p : Bukkit.getOnlinePlayers()) {
-		                            p.playSound(p.getLocation(), Sound.WITHER_DEATH, 1, 0);
-		                        }
+								Bukkit.getServer()
+										.broadcastMessage(String.format(
+												"%s is preparing to siege %s! All players wishing to participate in the defense should head there immediately! Siege will begin in %d minutes",
+												taskPlayerDisplayName, taskSiegeName,
+												(Settings.SiegeDelay.get(taskSiegeName) / 60) / 4 * 2));
+								for (Player p : Bukkit.getOnlinePlayers()) {
+									p.playSound(p.getLocation(), Sound.WITHER_DEATH, 1, 0);
+								}
 							}
-						}.runTaskLater( Movecraft.getInstance(), ( 20 * Settings.SiegeDelay.get(taskSiegeName ) / 4 * 2 ));
-                        BukkitTask warningtask3 = new BukkitRunnable() {
+						}.runTaskLater(Movecraft.getInstance(), (20 * Settings.SiegeDelay.get(taskSiegeName) / 4 * 2));
+						BukkitTask warningtask3 = new BukkitRunnable() {
 							@Override
 							public void run() {
-								Bukkit.getServer().broadcastMessage(String.format("%s is preparing to siege %s! All players wishing to participate in the defense should head there immediately! Siege will begin in %d minutes"
-	            						, taskPlayerDisplayName, taskSiegeName, (Settings.SiegeDelay.get(taskSiegeName) / 60) / 4 * 1));
-		                        for(Player p : Bukkit.getOnlinePlayers()) {
-		                            p.playSound(p.getLocation(), Sound.WITHER_DEATH, 1, 0);
-		                        }
+								Bukkit.getServer()
+										.broadcastMessage(String.format(
+												"%s is preparing to siege %s! All players wishing to participate in the defense should head there immediately! Siege will begin in %d minutes",
+												taskPlayerDisplayName, taskSiegeName,
+												(Settings.SiegeDelay.get(taskSiegeName) / 60) / 4 * 1));
+								for (Player p : Bukkit.getOnlinePlayers()) {
+									p.playSound(p.getLocation(), Sound.WITHER_DEATH, 1, 0);
+								}
 							}
-						}.runTaskLater( Movecraft.getInstance(), ( 20 * Settings.SiegeDelay.get(taskSiegeName ) / 4 * 3 ));
+						}.runTaskLater(Movecraft.getInstance(), (20 * Settings.SiegeDelay.get(taskSiegeName) / 4 * 3));
 						BukkitTask commencetask = new BukkitRunnable() {
 							@Override
 							public void run() {
-								Bukkit.getServer().broadcastMessage(String.format("The Siege of %s has commenced! The siege leader is %s. Destroy the enemy vessels!"
-	            						, taskSiegeName, taskPlayerDisplayName, (Settings.SiegeDuration.get(taskSiegeName) / 60) ));
-		                        for(Player p : Bukkit.getOnlinePlayers()) {
-		                            p.playSound(p.getLocation(), Sound.WITHER_DEATH, 1, 0);
-		                        }
-								Movecraft.getInstance().currentSiegeName=taskSiegeName;
-								Movecraft.getInstance().currentSiegePlayer=taskPlayerName;
-								Movecraft.getInstance().currentSiegeStartTime=System.currentTimeMillis();
+								Bukkit.getServer()
+										.broadcastMessage(String.format(
+												"The Siege of %s has commenced! The siege leader is %s. Destroy the enemy vessels!",
+												taskSiegeName, taskPlayerDisplayName,
+												(Settings.SiegeDuration.get(taskSiegeName) / 60)));
+								for (Player p : Bukkit.getOnlinePlayers()) {
+									p.playSound(p.getLocation(), Sound.WITHER_DEATH, 1, 0);
+								}
+								Movecraft.getInstance().currentSiegeName = taskSiegeName;
+								Movecraft.getInstance().currentSiegePlayer = taskPlayerName;
+								Movecraft.getInstance().currentSiegeStartTime = System.currentTimeMillis();
 							}
-						}.runTaskLater( Movecraft.getInstance(), ( 20 * Settings.SiegeDelay.get(taskSiegeName ) ));
-						Movecraft.getInstance().getLogger().log(Level.INFO, String.format("Siege: %s commenced by %s for a cost of %d",foundSiegeName,player.getName(),cost));	
+						}.runTaskLater(Movecraft.getInstance(), (20 * Settings.SiegeDelay.get(taskSiegeName)));
+						Movecraft.getInstance().getLogger().log(Level.INFO, String.format(
+								"Siege: %s commenced by %s for a cost of %d", foundSiegeName, player.getName(), cost));
 						Movecraft.getInstance().getEconomy().withdrawPlayer(player, cost);
-						Movecraft.getInstance().siegeInProgress=true;
-            		} else {
-    					player.sendMessage(String.format( I18nSupport.getInternationalisedString( "The time is not during the Siege schedule" )));
-        				return true;
-            		}
-            	} else {
-					player.sendMessage(String.format( "You do not have enough money. You need %d",cost ));
-    				return true;
-            	}
-            } else {
-				player.sendMessage( String.format( I18nSupport.getInternationalisedString( "Could not find a siege configuration for the region you are in" ) ) );
+						Movecraft.getInstance().siegeInProgress = true;
+					} else {
+						player.sendMessage(String.format(
+								I18nSupport.getInternationalisedString("The time is not during the Siege schedule")));
+						return true;
+					}
+				} else {
+					player.sendMessage(String.format("You do not have enough money. You need %d", cost));
+					return true;
+				}
+			} else {
+				player.sendMessage(String.format(I18nSupport
+						.getInternationalisedString("Could not find a siege configuration for the region you are in")));
 				return true;
-            }
+			}
 		}
-		
+
 		return false;
 	}
 

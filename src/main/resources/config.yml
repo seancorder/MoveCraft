@@ -2,6 +2,7 @@ Locale: en
 CompatibilityMode: true
 SinkRateTicks: 20
 SinkCheckTicks: 100
+ShipDetectCheckTicks: 126000
 TracerRateTicks: 5
 PilotTool: 280
 WorldGuardBlockMoveOnBuildPerm: true
@@ -14,8 +15,10 @@ RequireCreatePerm: false
 TNTContactExplosives: true
 DisableCrates: false
 FadeWrecksAfter: 0
+FreeRepair: false
 RepairTicksPerBlock: 10
 RepairMoneyPerBlock: 10
+MaintenanceAllow: false
 BlockQueueChunkSize: 1000
 AllowCrewSigns: true
 SetHomeToCrewSign: false

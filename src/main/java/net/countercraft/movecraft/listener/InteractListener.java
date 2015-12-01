@@ -34,7 +34,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
-import org.bukkit.craftbukkit.v1_8_R2.util.CraftMagicNumbers;
+import org.bukkit.craftbukkit.v1_8_R3.util.CraftMagicNumbers;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -210,7 +210,7 @@ public class InteractListener implements Listener {
 								}
 							}
 							final Location loc = event.getClickedBlock().getLocation();
-							final Craft c = new Craft( getCraftTypeFromString( craftTypeStr ), loc.getWorld() );
+							final Craft c = new Craft( getCraftTypeFromString( craftTypeStr ), loc.getWorld(), "" );
 							MovecraftLocation startPoint = new MovecraftLocation( loc.getBlockX(), loc.getBlockY(), loc.getBlockZ() );
 							c.detect( null, event.getPlayer(), startPoint );
 							BukkitTask releaseTask = new BukkitRunnable() {
@@ -260,10 +260,11 @@ public class InteractListener implements Listener {
 		if ( getCraftTypeFromString( org.bukkit.ChatColor.stripColor(sign.getLine( 0 )) ) != null ) {
 			// Valid sign prompt for ship command.
 			if ( event.getPlayer().hasPermission( "movecraft." + org.bukkit.ChatColor.stripColor(sign.getLine( 0 )) + ".pilot" ) ) {
+				String craftName = org.bukkit.ChatColor.stripColor(sign.getLine( 1 ));
 				// Attempt to run detection
 				Location loc = event.getClickedBlock().getLocation();
 				MovecraftLocation startPoint = new MovecraftLocation( loc.getBlockX(), loc.getBlockY(), loc.getBlockZ() );
-				final Craft c = new Craft( getCraftTypeFromString( org.bukkit.ChatColor.stripColor(sign.getLine( 0 )) ), loc.getWorld() );
+				final Craft c = new Craft( getCraftTypeFromString( org.bukkit.ChatColor.stripColor(sign.getLine( 0 )) ), loc.getWorld(), craftName );
 				
 				if(c.getType().getCruiseOnPilot()==true) {
 					c.detect( null, event.getPlayer(), startPoint );
@@ -358,7 +359,7 @@ public class InteractListener implements Listener {
 						}
 					}
 					final Location loc = event.getClickedBlock().getLocation();
-					final Craft c = new Craft( getCraftTypeFromString( craftTypeStr ), loc.getWorld() );
+					final Craft c = new Craft( getCraftTypeFromString( craftTypeStr ), loc.getWorld(), "" );
 					MovecraftLocation startPoint = new MovecraftLocation( loc.getBlockX(), loc.getBlockY(), loc.getBlockZ() );
 					c.detect( null, event.getPlayer(), startPoint );
 					BukkitTask releaseTask = new BukkitRunnable() {
