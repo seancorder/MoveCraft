@@ -141,7 +141,8 @@ public class AsyncManager extends BukkitRunnable {
 				if (pCraft != null && p != null) {
 					// Player is already controlling a craft
 					notifyP.sendMessage(String.format(
-							I18nSupport.getInternationalisedString("Detection - Failed - Already commanding a craft")));
+							I18nSupport.getInternationalisedString("Detection - Failed - Already commanding a craft")+ " Craft: %s", pCraft.getCraftname()));
+					Movecraft.getInstance().getLogger().log(Level.INFO, "Player already piloting craft? " + pCraft.getCraftname());
 				} else {
 					if (data.failed()) {
 						if (notifyP != null)
@@ -278,7 +279,7 @@ public class AsyncManager extends BukkitRunnable {
 												"NULL PLAYER", c.getType().getCraftName(), c.getBlockList().length,
 												c.getMinX(), c.getMinZ()));
 							}
-							CraftManager.getInstance().addCraft(c, p);
+							CraftManager.getInstance().addCraftandPlayer(c, p);
 						}
 					}
 				}
@@ -622,7 +623,7 @@ public class AsyncManager extends BukkitRunnable {
 		// check every few seconds for every craft to see if it should be
 		long ticksElapsed = (System.currentTimeMillis() - TimeTool.getInstance().getLastChunkCheck());
 		if (ticksElapsed > Settings.ShipDetectCheckTicks) {
-			Movecraft.getInstance().getLogger().log(Level.INFO, "Chunk Check and System Time : "
+			Movecraft.getInstance().getLogger().log(Level.INFO, "Evaluating Chunks for Ships : "
 					+ TimeTool.getInstance().getLastChunkCheck() + " " + System.currentTimeMillis());
 			for (World w : Bukkit.getWorlds()) {
 				for (org.bukkit.Chunk c : w.getLoadedChunks()) {
@@ -660,7 +661,6 @@ public class AsyncManager extends BukkitRunnable {
 
 											}.runTaskLater(Movecraft.getInstance(), (20 * 15));
 										} else {
-											// Temp: Add craft check here.
 											if (CraftManager.getInstance().getCraftsInWorld(w) != null) {
 												boolean craftMatch = false;
 												String matchCraftName = "";
@@ -681,7 +681,7 @@ public class AsyncManager extends BukkitRunnable {
 												}
 												if (craftMatch) {
 													Movecraft.getInstance().getLogger().log(Level.INFO,
-															"Craft already located here is the same: "
+															"Matched Craft: "
 																	+ matchCraftName);
 												} else {
 													// detect the craft
@@ -770,11 +770,7 @@ public class AsyncManager extends BukkitRunnable {
 								// are below the threshold specified in
 								// SinkPercent
 								boolean isSinking = false;
-								double flyPercent = 0; // SC: Added this up
-														// here. I am not sure
-														// this makes it global
-														// enough for the damage
-														// notification. (noob)
+								double flyPercent = 0; 
 								for (ArrayList<Integer> i : pcraft.getType().getFlyBlocks().keySet()) {
 									int numfound = 0;
 									if (foundFlyBlocks.get(i) != null) {
@@ -806,9 +802,13 @@ public class AsyncManager extends BukkitRunnable {
 															I18nSupport.getInternationalisedString(
 																	"If not in combat Repair your ship! ")
 															+ "Total: %.2f%% FlyBlocks: %.2f%%", percent * 100,
-													flyPercent)); // SC: need to
-																	// add
-																	// localization
+													flyPercent)); // SC: need to add localization
+										//if we have additional damage, we should increment the time
+										if( totalNonAirWaterBlocks < pcraft.getlastBlockCount())
+										{
+											pcraft.setLastDamageTime(System.currentTimeMillis());
+											pcraft.setlastBlockCount(totalNonAirWaterBlocks);
+										}
 									}
 								}
 
@@ -1359,7 +1359,8 @@ public class AsyncManager extends BukkitRunnable {
 		processDetection();
 		processSiege();
 		processAlgorithmQueue();
-		processShipDetection();
+		if(Settings.ShipChunkDetection)
+			processShipDetection();
 	}
 
 	private void clear(Craft c) {

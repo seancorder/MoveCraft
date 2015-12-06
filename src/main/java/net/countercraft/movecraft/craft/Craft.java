@@ -39,6 +39,7 @@ public class Craft {
 	private World w;
 	private AtomicBoolean processing = new AtomicBoolean();
 	private int minX, minZ, maxHeightLimit;
+	private boolean maintenance;
 	private boolean cruising;
 	private boolean sinking;
 	private byte cruiseDirection;
@@ -52,6 +53,8 @@ public class Craft {
 	private double pilotLockedX;
 	private double pilotLockedY;
 	private int origBlockCount;
+	private int lastBlockCount;
+	private long lastDamageTime; //Last time when the ship was caught with a different block count
 	private double pilotLockedZ;
 	private Player notificationPlayer;
 	private String craftName;
@@ -72,6 +75,7 @@ public class Craft {
 		this.pilotLockedZ=0.0;
 		this.keepMoving=false;
 		this.craftName = cn;
+		this.maintenance = false; //default to no maintenance
 	}
 
 	public boolean isNotProcessing() {
@@ -298,6 +302,10 @@ public class Craft {
 		this.minZ = minZ;
 	}
 	
+	public boolean getMaintenance() {
+		return maintenance;
+	}
+	
 	public boolean getCruising() {
 		return cruising;
 	}
@@ -321,8 +329,16 @@ public class Craft {
 	public void setSinking(boolean sinking) {
 		this.sinking=sinking;
 	}
+	
+	public void setMaintenance(boolean maintenance) {
+		this.maintenance=maintenance;
+	}
 
-	public void setLastCruisUpdate(long update) {
+	public void setLastCruisUpdate(long update) { //SC:  should this have an e?
+		this.lastCruiseUpdate=update;
+	}
+	
+	public void setLastCruiseUpdate(long update) { 
 		this.lastCruiseUpdate=update;
 	}
 	
@@ -336,6 +352,14 @@ public class Craft {
 	
 	public long getLastBlockCheck() {
 		return lastBlockCheck;
+	}
+	
+	public void setLastDamageTime(long update) {
+		this.lastDamageTime=update;
+	}
+	
+	public long getLastDamageTime() {
+		return lastDamageTime;
 	}
 	
 	public void setLastRightClick(long update) {
@@ -424,10 +448,19 @@ public class Craft {
 	
 	public void setOrigBlockCount(int origBlockCount) {
 		this.origBlockCount=origBlockCount;
+		this.lastBlockCount= origBlockCount;
 	}
 	
 	public int getOrigBlockCount() {
 		return origBlockCount;
+	}
+	//trying to detect a lame release or early maintenace
+	public void setlastBlockCount(int lastBlockCount) {
+		this.lastBlockCount=lastBlockCount;
+	}
+	
+	public int getlastBlockCount() {
+		return lastBlockCount;
 	}
 	
 	public void setNotificationPlayer(Player notificationPlayer) {

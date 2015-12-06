@@ -309,7 +309,7 @@ public class CommandListener implements CommandExecutor {
 							//SC:  Add craft name here
 							output = craft.getType().getCraftName() + " " + craft.getCraftname() + " Captain: "+ craft.getNotificationPlayer().getName()
 									+ " " + craft.getBlockList().length + " @ " + craft.getMinX() + ","
-									+ craft.getMinY() + "," + craft.getMinZ();
+									+ craft.getMinY() + "," + craft.getMinZ() + "Debug: " + CraftManager.getInstance().getPlayerFromCraft(craft).getDisplayName();
 						} else {
 							output = craft.getType().getCraftName() + " " + craft.getCraftname() + " No Captain " + craft.getBlockList().length + " @ "
 									+ craft.getMinX() + "," + craft.getMinY() + "," + craft.getMinZ();

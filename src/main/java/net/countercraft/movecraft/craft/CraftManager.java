@@ -88,6 +88,13 @@ public class CraftManager {
 		Movecraft.getInstance().getLogger().log( Level.INFO, String.format( I18nSupport.getInternationalisedString( "Startup - Number of craft files loaded" ), craftTypes.length ) );
 	}
 
+	public void addPlayerToCraft(Craft c, Player p)
+	{
+		craftPlayerIndex.remove(c);
+		craftPlayerIndex.put(p, c);
+		
+	}
+	
 	public void addCraft(Craft c)
 	{
 		Set<Craft> crafts = craftList.get( c.getW() );
@@ -98,13 +105,16 @@ public class CraftManager {
 		
 	}
 	
-	public void addCraft( Craft c, Player p ) {
+	public void addCraftandPlayer( Craft c, Player p ) {
 		Set<Craft> crafts = craftList.get( c.getW() );
 		if ( crafts == null ) {
 			craftList.put( c.getW(), new HashSet<Craft>() );
 		}
 		craftList.get( c.getW() ).add( c );
-		craftPlayerIndex.put( p, c );
+		if(p != null){
+			craftPlayerIndex.remove(null, c); //If we have null values left.
+			craftPlayerIndex.put( p, c );
+		}
 		
 	}
 
@@ -112,6 +122,7 @@ public class CraftManager {
 	{
 		//SC:  Removing craft 100% :-)  Probably to re-pilot
 		craftList.get( c.getW() ).remove( c );
+		craftPlayerIndex.remove(c);
 		
 	}
 	public void removeCraft( Craft c ) {
@@ -130,7 +141,6 @@ public class CraftManager {
 		
 		//SC:  REMOVE TEST: This might be crazy, but I am NOT going to remove from list
 		//craftList.get( c.getW() ).remove( c );
-		
 		
 		if ( getPlayerFromCraft( c ) != null ) {
 			getPlayerFromCraft( c ).sendMessage( String.format( I18nSupport.getInternationalisedString( "Release - Craft has been released message" ) ) );
@@ -175,13 +185,10 @@ public class CraftManager {
 
 	public Player getPlayerFromCraft( Craft c ) {
 		for ( Map.Entry<Player, Craft> playerCraftEntry : craftPlayerIndex.entrySet() ) {
-
 			if ( playerCraftEntry.getValue() == c ) {
 				return playerCraftEntry.getKey();
 			}
-
 		}
-
 		return null;
 	}
 	
