@@ -268,7 +268,7 @@ public class InteractListener implements Listener {
 				Location loc = event.getClickedBlock().getLocation();
 				MovecraftLocation startPoint = new MovecraftLocation( loc.getBlockX(), loc.getBlockY(), loc.getBlockZ() );
 				final Craft c = new Craft( getCraftTypeFromString( org.bukkit.ChatColor.stripColor(sign.getLine( 0 )) ), loc.getWorld(), craftName );
-				
+				//example: LaunchTorpedo
 				if(c.getType().getCruiseOnPilot()==true) {
 					c.detect( null, event.getPlayer(), startPoint );
 					c.setCruiseDirection(sign.getRawData());
@@ -288,7 +288,7 @@ public class InteractListener implements Listener {
 					//So, first match the crafts
 					boolean craftMatch = false;
 					Craft existingCraft = null;
-					//IF any crafts in world!  TODO:
+					
 					if (CraftManager.getInstance().getCraftsInWorld(loc.getWorld()) != null)
 					{
 						for (Craft oldcraft : CraftManager.getInstance().getCraftsInWorld(loc.getWorld())) {
@@ -307,15 +307,31 @@ public class InteractListener implements Listener {
 					//only force damaged crafts if PersistentPilot is on.
 					if ( craftMatch == true && Settings.PersistentPilot == true)
 					{
-						//Let's check the last damage time, OR if the craft is in maintenance
+						//Let's check the last damage time, OR if the craft is in maintenance OR if the craft is piloted by someone else.
 						long ticksElapsed = (System.currentTimeMillis() - existingCraft.getLastDamageTime());
 						if ( Settings.LastDamageRequirement > ticksElapsed && existingCraft.getMaintenance() == false) {
 							//Just adding the player to a damaged craft
-							//CraftManager.getInstance().addPlayerToCraft(existingCraft, p);
-							CraftManager.getInstance().fullremoveCraft(existingCraft);
-							CraftManager.getInstance().addCraftandPlayer(existingCraft, p);
-							existingCraft.setNotificationPlayer(p);
-							p.sendMessage( String.format( I18nSupport.getInternationalisedString( "Player - Taking over damaged craft." ) ) );
+							//Make sure no one else is piloting. 
+							boolean craftAvailable = true;
+							if(existingCraft.getNotificationPlayer() != null)
+							{
+								if(existingCraft.getNotificationPlayer().getName() != p.getName())
+								{
+									craftAvailable = false;
+									p.sendMessage(String.format(I18nSupport.getInternationalisedString(
+											"Detection - Failed Craft is already being controlled") + " By: %s",
+											existingCraft.getNotificationPlayer().getName()));
+								}
+							}
+							
+							if(craftAvailable)
+							{
+								CraftManager.getInstance().fullremoveCraft(existingCraft);
+								CraftManager.getInstance().addCraftandPlayer(existingCraft, p);
+								existingCraft.setNotificationPlayer(p);
+								p.sendMessage( String.format( I18nSupport.getInternationalisedString( "Player - Taking over damaged craft." ) ) );
+							}	
+							
 							
 						}
 						else

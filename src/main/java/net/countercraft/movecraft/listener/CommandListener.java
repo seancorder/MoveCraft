@@ -173,15 +173,76 @@ public class CommandListener implements CommandExecutor {
 
 			if (args.length > 0) {
 				if (player.hasPermission("movecraft." + args[0] + ".pilot")) {
+					
+					Location loc = player.getLocation();
 					MovecraftLocation startPoint = MathUtils.bukkit2MovecraftLoc(player.getLocation());
 					Craft c = new Craft(getCraftTypeFromString(args[0]), player.getWorld(), "");
-
-					if (CraftManager.getInstance().getCraftByPlayerName(player.getName()) == null) {
-						c.detect(player, player, startPoint);
-					} else {
-						Craft oldCraft = CraftManager.getInstance().getCraftByPlayerName(player.getName());
-						CraftManager.getInstance().removeCraft(oldCraft);
-						c.detect(player, player, startPoint);
+					boolean craftMatch = false;
+					Craft existingCraft = null;
+							
+					//start craft checking
+					if (CraftManager.getInstance().getCraftsInWorld(player.getWorld()) != null)
+					{
+						for (Craft oldcraft : CraftManager.getInstance().getCraftsInWorld(loc.getWorld()))
+						{
+							MovecraftLocation[] blockList = oldcraft.getBlockList();
+							for (int i = 0; i < blockList.length; i++) {
+								if (blockList[i].getX() == loc.getBlockX()
+										&& blockList[i].getY() == loc.getBlockY()
+										&& blockList[i].getZ() == loc.getBlockZ())
+								{
+									craftMatch = true;
+									existingCraft = oldcraft;
+								}
+							}
+						}
+						
+					}
+					
+					if ( craftMatch == true && Settings.PersistentPilot == true)
+					{
+						//Let's check the last damage time, OR if the craft is in maintenance OR if the craft is piloted by someone else.
+						long ticksElapsed = (System.currentTimeMillis() - existingCraft.getLastDamageTime());
+						if ( Settings.LastDamageRequirement > ticksElapsed && existingCraft.getMaintenance() == false) {
+							//Just adding the player to a damaged craft
+							//Make sure no one else is piloting. 
+							if(existingCraft.getNotificationPlayer().getName() == player.getName() || existingCraft.getNotificationPlayer().getName() == null)
+							{
+								CraftManager.getInstance().fullremoveCraft(existingCraft);
+								CraftManager.getInstance().addCraftandPlayer(existingCraft, player);
+								existingCraft.setNotificationPlayer(player);
+								player.sendMessage( String.format( I18nSupport.getInternationalisedString( "Player - Taking over damaged craft." ) ) );
+							}
+							else
+							{
+								player.sendMessage(String.format(I18nSupport.getInternationalisedString(
+										"Detection - Failed Craft is already being controlled") + " By: %s",
+										existingCraft.getNotificationPlayer().getName()));
+							}
+							
+						}
+						else
+						{
+							if (CraftManager.getInstance().getCraftByPlayerName(player.getName()) == null) {
+								c.detect(player, player, startPoint);
+							} else {
+								Craft oldCraft = CraftManager.getInstance().getCraftByPlayerName(player.getName());
+								CraftManager.getInstance().removeCraft(oldCraft);
+								c.detect(player, player, startPoint);
+							}
+							
+						}	
+						
+					}
+					else
+					{
+						if (CraftManager.getInstance().getCraftByPlayerName(player.getName()) == null) {
+							c.detect(player, player, startPoint);
+						} else {
+							Craft oldCraft = CraftManager.getInstance().getCraftByPlayerName(player.getName());
+							CraftManager.getInstance().removeCraft(oldCraft);
+							c.detect(player, player, startPoint);
+						}
 					}
 
 				} else {
