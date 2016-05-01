@@ -28,13 +28,14 @@ import net.countercraft.movecraft.utils.MapUpdateManager;
 import net.countercraft.movecraft.utils.MathUtils;
 import net.countercraft.movecraft.utils.MovecraftLocation;
 import net.countercraft.movecraft.utils.Rotation;
+import net.countercraft.movecraft.utils.TimeTool;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
-import org.bukkit.craftbukkit.v1_8_R2.util.CraftMagicNumbers;
+import org.bukkit.craftbukkit.v1_9_R1.util.CraftMagicNumbers;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -54,6 +55,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.logging.Level;
 
 public class InteractListener implements Listener {
 	private static final Map<Player, Long> timeMap = new HashMap<Player, Long>();
@@ -210,7 +212,7 @@ public class InteractListener implements Listener {
 								}
 							}
 							final Location loc = event.getClickedBlock().getLocation();
-							final Craft c = new Craft( getCraftTypeFromString( craftTypeStr ), loc.getWorld() );
+							final Craft c = new Craft( getCraftTypeFromString( craftTypeStr ), loc.getWorld(), "" );
 							MovecraftLocation startPoint = new MovecraftLocation( loc.getBlockX(), loc.getBlockY(), loc.getBlockZ() );
 							c.detect( null, event.getPlayer(), startPoint );
 							BukkitTask releaseTask = new BukkitRunnable() {
@@ -242,6 +244,7 @@ public class InteractListener implements Listener {
 	}
 	
 	private void onSignRightClick( PlayerInteractEvent event ) {
+		Player p = event.getPlayer();
 		Sign sign = ( Sign ) event.getClickedBlock().getState();
 		String signText = org.bukkit.ChatColor.stripColor(sign.getLine( 0 ));
 
@@ -260,11 +263,12 @@ public class InteractListener implements Listener {
 		if ( getCraftTypeFromString( org.bukkit.ChatColor.stripColor(sign.getLine( 0 )) ) != null ) {
 			// Valid sign prompt for ship command.
 			if ( event.getPlayer().hasPermission( "movecraft." + org.bukkit.ChatColor.stripColor(sign.getLine( 0 )) + ".pilot" ) ) {
+				String craftName = org.bukkit.ChatColor.stripColor(sign.getLine( 1 ));
 				// Attempt to run detection
 				Location loc = event.getClickedBlock().getLocation();
 				MovecraftLocation startPoint = new MovecraftLocation( loc.getBlockX(), loc.getBlockY(), loc.getBlockZ() );
-				final Craft c = new Craft( getCraftTypeFromString( org.bukkit.ChatColor.stripColor(sign.getLine( 0 )) ), loc.getWorld() );
-				
+				final Craft c = new Craft( getCraftTypeFromString( org.bukkit.ChatColor.stripColor(sign.getLine( 0 )) ), loc.getWorld(), craftName );
+				//example: LaunchTorpedo
 				if(c.getType().getCruiseOnPilot()==true) {
 					c.detect( null, event.getPlayer(), startPoint );
 					c.setCruiseDirection(sign.getRawData());
@@ -280,17 +284,83 @@ public class InteractListener implements Listener {
 					}.runTaskLater( Movecraft.getInstance(), ( 20 * 15 ) );
 //					CraftManager.getInstance().getReleaseEvents().put( event.getPlayer(), releaseTask );
 				} else {
-					if ( CraftManager.getInstance().getCraftByPlayer( event.getPlayer() ) == null ) {
-						c.detect( event.getPlayer(), event.getPlayer(), startPoint );
-					} else {
-						Craft oldCraft=CraftManager.getInstance().getCraftByPlayer( event.getPlayer() );
-						if(oldCraft.isNotProcessing()) {
-							CraftManager.getInstance().removeCraft( oldCraft );
-							c.detect( event.getPlayer(), event.getPlayer(), startPoint );
+					//If not in maintenance and IS damaged in the last X minutes, just change the pilot.
+					//So, first match the crafts
+					boolean craftMatch = false;
+					Craft existingCraft = null;
+					
+					if (CraftManager.getInstance().getCraftsInWorld(loc.getWorld()) != null)
+					{
+						for (Craft oldcraft : CraftManager.getInstance().getCraftsInWorld(loc.getWorld())) {
+							MovecraftLocation[] blockList = oldcraft.getBlockList();
+							for (int i = 0; i < blockList.length; i++) {
+								if (blockList[i].getX() == loc.getBlockX()
+										&& blockList[i].getY() == loc.getBlockY()
+										&& blockList[i].getZ() == loc.getBlockZ())
+								{
+									craftMatch = true;
+									existingCraft = oldcraft;
+								}
+							}
 						}
 					}
-				}
-				
+					//only force damaged crafts if PersistentPilot is on.
+					if ( craftMatch == true && Settings.PersistentPilot == true)
+					{
+						//Let's check the last damage time, OR if the craft is in maintenance OR if the craft is piloted by someone else.
+						long ticksElapsed = (System.currentTimeMillis() - existingCraft.getLastDamageTime());
+						if ( Settings.LastDamageRequirement > ticksElapsed && existingCraft.getMaintenance() == false) {
+							//Just adding the player to a damaged craft
+							//Make sure no one else is piloting. 
+							boolean craftAvailable = true;
+							if(existingCraft.getNotificationPlayer() != null)
+							{
+								if(existingCraft.getNotificationPlayer().getName() != p.getName())
+								{
+									craftAvailable = false;
+									p.sendMessage(String.format(I18nSupport.getInternationalisedString(
+											"Detection - Failed Craft is already being controlled") + " By: %s",
+											existingCraft.getNotificationPlayer().getName()));
+								}
+							}
+							
+							if(craftAvailable)
+							{
+								CraftManager.getInstance().fullremoveCraft(existingCraft);
+								CraftManager.getInstance().addCraftandPlayer(existingCraft, p);
+								existingCraft.setNotificationPlayer(p);
+								p.sendMessage( String.format( I18nSupport.getInternationalisedString( "Player - Taking over damaged craft." ) ) );
+							}	
+							
+							
+						}
+						else
+						{
+							if ( CraftManager.getInstance().getCraftByPlayer( event.getPlayer() ) == null ) {
+								c.detect( p, p, startPoint );
+							} else {
+								Craft oldCraft=CraftManager.getInstance().getCraftByPlayer( p );
+								if(oldCraft.isNotProcessing()) {
+									CraftManager.getInstance().removeCraft( oldCraft );
+									c.detect( p, p, startPoint );
+								}
+							}
+							
+						}	
+					}
+					else
+					{
+						if ( CraftManager.getInstance().getCraftByPlayer( p ) == null ) {
+							c.detect( p, p, startPoint );
+						} else {
+							Craft oldCraft=CraftManager.getInstance().getCraftByPlayer( p );
+							if(oldCraft.isNotProcessing()) {
+								CraftManager.getInstance().removeCraft( oldCraft );
+								c.detect( p, p, startPoint );
+							}
+						}
+					}
+				}				
 				event.setCancelled( true );
 			} else {
 			event.getPlayer().sendMessage( String.format( I18nSupport.getInternationalisedString( "Insufficient Permissions" ) ) );
@@ -358,7 +428,7 @@ public class InteractListener implements Listener {
 						}
 					}
 					final Location loc = event.getClickedBlock().getLocation();
-					final Craft c = new Craft( getCraftTypeFromString( craftTypeStr ), loc.getWorld() );
+					final Craft c = new Craft( getCraftTypeFromString( craftTypeStr ), loc.getWorld(), "" );
 					MovecraftLocation startPoint = new MovecraftLocation( loc.getBlockX(), loc.getBlockY(), loc.getBlockZ() );
 					c.detect( null, event.getPlayer(), startPoint );
 					BukkitTask releaseTask = new BukkitRunnable() {

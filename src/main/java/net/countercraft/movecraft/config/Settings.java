@@ -35,6 +35,8 @@ public class Settings {
 	public static double SinkRateTicks = 20.0;
 	public static double SinkCheckTicks = 100.0;
 	public static double TracerRateTicks = 5.0;
+	public static boolean AllowMaintenance = false;
+	public static boolean PersistentPilot = true;
 	public static boolean WorldGuardBlockMoveOnBuildPerm = false;
 	public static boolean WorldGuardBlockSinkOnPVPPerm = false;
 	public static boolean DisableCrates = false;
@@ -44,9 +46,14 @@ public class Settings {
 	public static int FadeWrecksAfter = 0;
 	public static int ManOverBoardTimeout = 60;
 	public static int FireballLifespan = 6;
+	public static boolean FreeRepair = false;
+	public static boolean ShipChunkDetection = true;
+	public static double ShipDetectCheckTicks = 10.0; //default 5 minutes (might be aggressive on busy servers)
+	public static double LastDamageRequirement = 10.0; //This will be 10 minutes by default. (5 for testing)
 	public static int RepairTicksPerBlock = 0;
 	public static int BlockQueueChunkSize = 1000;
 	public static double RepairMoneyPerBlock = 0.0;
+	public static boolean MaintenanceAllow = true; //SC:  Added in, not sure how I'm going to implement yet.
 	public static boolean FireballPenetration = true;
 	public static boolean AllowCrewSigns = true;
 	public static boolean SetHomeToCrewSign = true;

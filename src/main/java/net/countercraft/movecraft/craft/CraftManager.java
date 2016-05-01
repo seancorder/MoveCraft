@@ -88,21 +88,48 @@ public class CraftManager {
 		Movecraft.getInstance().getLogger().log( Level.INFO, String.format( I18nSupport.getInternationalisedString( "Startup - Number of craft files loaded" ), craftTypes.length ) );
 	}
 
-	public void addCraft( Craft c, Player p ) {
+	public void addPlayerToCraft(Craft c, Player p)
+	{
+		craftPlayerIndex.remove(c);
+		craftPlayerIndex.put(p, c);
+		
+	}
+	
+	public void addCraft(Craft c)
+	{
 		Set<Craft> crafts = craftList.get( c.getW() );
 		if ( crafts == null ) {
 			craftList.put( c.getW(), new HashSet<Craft>() );
 		}
 		craftList.get( c.getW() ).add( c );
-		craftPlayerIndex.put( p, c );
+		
+	}
+	
+	public void addCraftandPlayer( Craft c, Player p ) {
+		Set<Craft> crafts = craftList.get( c.getW() );
+		if ( crafts == null ) {
+			craftList.put( c.getW(), new HashSet<Craft>() );
+		}
+		craftList.get( c.getW() ).add( c );
+		if(p != null){
+			craftPlayerIndex.remove(null, c); //If we have null values left.
+			craftPlayerIndex.put( p, c );
+		}
+		
 	}
 
+	public void fullremoveCraft (Craft c)
+	{
+		//SC:  Removing craft 100% :-)  Probably to re-pilot
+		craftList.get( c.getW() ).remove( c );
+		craftPlayerIndex.remove(c);
+		
+	}
 	public void removeCraft( Craft c ) {
 		removeReleaseTask(c);
 		// if its sinking, just remove the craft without notifying or checking
 		if(c.getSinking()==true) {
 			craftList.get( c.getW() ).remove( c );
-			craftPlayerIndex.remove( getPlayerFromCraft( c ) );			
 		}
 		// don't just release torpedoes, make them sink so they don't clutter up the place
 		if(c.getType().getCruiseOnPilot()==true) {
@@ -111,14 +138,23 @@ public class CraftManager {
 			c.setNotificationPlayer(null);
 			return;
 		}
-		craftList.get( c.getW() ).remove( c );
+		
+		//SC:  REMOVE TEST: This might be crazy, but I am NOT going to remove from list
+		//craftList.get( c.getW() ).remove( c );
+		
 		if ( getPlayerFromCraft( c ) != null ) {
 			getPlayerFromCraft( c ).sendMessage( String.format( I18nSupport.getInternationalisedString( "Release - Craft has been released message" ) ) );
-			Movecraft.getInstance().getLogger().log( Level.INFO, String.format( I18nSupport.getInternationalisedString( "Release - Player has released a craft console" ), c.getNotificationPlayer().getName(), c.getType().getCraftName(), c.getBlockList().length, c.getMinX(), c.getMinZ() ) );
+			Movecraft.getInstance().getLogger().log( Level.INFO, String.format( I18nSupport.getInternationalisedString( "Release - Player has released control of a Ship craft console" ), c.getNotificationPlayer().getName(), c.getType().getCraftName(), c.getBlockList().length, c.getMinX(), c.getMinZ() ) );
 		} else {
 			Movecraft.getInstance().getLogger().log( Level.INFO, String.format( I18nSupport.getInternationalisedString( "NULL Player has released a craft of type %s with size %d at coordinates : %d x , %d z" ),  c.getType().getCraftName(), c.getBlockList().length, c.getMinX(), c.getMinZ() ) );
 		}
-		craftPlayerIndex.remove( getPlayerFromCraft( c ) );
+		Player p=getPlayerFromCraft( c );
+		craftPlayerIndex.remove( p );
+		craftPlayerIndex.put(null, c);
+		c.setNotificationPlayer(null);
+		
+		  
+		//this.addCraft(c);
 	}
 
 	public Craft[] getCraftsInWorld( World w ) {
@@ -149,13 +185,10 @@ public class CraftManager {
 
 	public Player getPlayerFromCraft( Craft c ) {
 		for ( Map.Entry<Player, Craft> playerCraftEntry : craftPlayerIndex.entrySet() ) {
-
 			if ( playerCraftEntry.getValue() == c ) {
 				return playerCraftEntry.getKey();
 			}
-
 		}
-
 		return null;
 	}
 	

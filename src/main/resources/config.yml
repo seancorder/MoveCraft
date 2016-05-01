@@ -14,8 +14,19 @@ RequireCreatePerm: false
 TNTContactExplosives: true
 DisableCrates: false
 FadeWrecksAfter: 0
+#Detect Crafts within loaded chunks (and pilot them; making them sinkable
+ShipChunkDetection: true
+ShipDetectCheckTicks: 10 # number of minutes to wait before running the ShipChunkDetection
+#Ships are always piloted once piloted
+PersistentPilot: true
+LastDamageRequirement: 10 # number minutes to wait before allowing a craft's blocks to be recalculated after damage
+#Allow Maintenance Signs  (Takes the craft offline even in a PersistentPilot mode)
+AllowMaintenance: false
+#Allow Crafts to be repaired without having blocks in chests
+FreeRepair: false
 RepairTicksPerBlock: 10
 RepairMoneyPerBlock: 10
+MaintenanceAllow: false
 BlockQueueChunkSize: 1000
 AllowCrewSigns: true
 SetHomeToCrewSign: false

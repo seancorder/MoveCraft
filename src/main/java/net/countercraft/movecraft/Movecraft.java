@@ -127,6 +127,8 @@ public class Movecraft extends JavaPlugin {
 				}
 		}
 		logger.log(Level.INFO, "CompatiblityMode is set to {0}", Settings.CompatibilityMode);
+		double ShipDetectCheckTicks = getConfig().getDouble("ShipDetectCheckTicks", 10.00);
+		double LastDamageRequirement = getConfig().getDouble("LastDamageRequirement", 10.00);
 		Settings.SinkRateTicks = getConfig().getDouble("SinkRateTicks", 20.0);
 		Settings.SinkCheckTicks = getConfig().getDouble("SinkCheckTicks", 100.0);
 		Settings.TracerRateTicks = getConfig().getDouble("TracerRateTicks", 5.0);
@@ -134,6 +136,15 @@ public class Movecraft extends JavaPlugin {
 		Settings.FireballLifespan = getConfig().getInt("FireballLifespan", 6);
 		Settings.FireballPenetration = getConfig().getBoolean("FireballPenetration", true);
 		Settings.BlockQueueChunkSize = getConfig().getInt("BlockQueueChunkSize", 1000);
+		Settings.FreeRepair = getConfig().getBoolean("FreeRepair", false);
+		Settings.PersistentPilot = getConfig().getBoolean("PersistentPilot", true);
+		Settings.ShipChunkDetection = getConfig().getBoolean("ShipChunkDetection", true);
+		Settings.AllowMaintenance = getConfig().getBoolean("Maintenance", false);
+		logger.log(Level.INFO, "FreeRepair is set to {0}", Settings.FreeRepair);
+		Settings.MaintenanceAllow = getConfig().getBoolean("MaintenanceAllow", false);
+		logger.log(Level.INFO, "MaintenanceAllow is set to {0}", Settings.MaintenanceAllow);
+		Settings.ShipDetectCheckTicks = ShipDetectCheckTicks*60*1000;
+		Settings.LastDamageRequirement = LastDamageRequirement*60*1000;  //Convert to MS
 		Settings.AllowCrewSigns = getConfig().getBoolean("AllowCrewSigns", true);
 		Settings.SetHomeToCrewSign = getConfig().getBoolean("SetHomeToCrewSign", true);
 		Settings.RequireCreatePerm = getConfig().getBoolean("RequireCreatePerm", false);
@@ -327,6 +338,7 @@ public class Movecraft extends JavaPlugin {
 			this.getCommand("manoverboard").setExecutor(new CommandListener());
 			this.getCommand("contacts").setExecutor(new CommandListener());
 			this.getCommand("siege").setExecutor(new CommandListener());
+			
 			
 			getServer().getPluginManager().registerEvents(new BlockListener(),
 					this);
