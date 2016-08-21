@@ -221,6 +221,12 @@ public class CommandListener implements CommandExecutor {
 							}
 							
 						}
+						//see if the craft is in maintenance, and let them see the time
+						else if (existingCraft.getMaintenance() == true)
+						{
+							long ticksMaintenance = ((existingCraft.getLastMaintenanceTime() - System.currentTimeMillis())/1000)/60;
+							player.sendMessage( String.format( I18nSupport.getInternationalisedString( "Player - Craft is in maintenance mode.  Turn off Maintenance or wait ") + " %s minutes", ticksMaintenance ) );
+						}
 						else
 						{
 							if (CraftManager.getInstance().getCraftByPlayerName(player.getName()) == null) {
@@ -261,11 +267,18 @@ public class CommandListener implements CommandExecutor {
 
 			final Craft craft = CraftManager.getInstance().getCraftByPlayerName(player.getName());
 
-			if (player.hasPermission("movecraft." + craft.getType().getCraftName() + ".rotate")) {
+			if (player.hasPermission("movecraft." + craft.getType().getCraftName() + ".rotate") && !craft.getMaintenance()) {
 				MovecraftLocation midPoint = getCraftMidPoint(craft);
 				CraftManager.getInstance().getCraftByPlayerName(player.getName()).rotate(Rotation.ANTICLOCKWISE,
 						midPoint);
-			} else {
+			} 
+			//see if the craft is in maintenance, and let them see the time
+			else if (craft.getMaintenance())
+			{
+				long ticksMaintenance = ((craft.getLastMaintenanceTime() - System.currentTimeMillis())/1000)/60;
+				player.sendMessage( String.format( I18nSupport.getInternationalisedString( "Player - Craft is in maintenance mode.  Turn off Maintenance or wait ") + " %s minutes", ticksMaintenance ) );
+			}
+			else {
 				player.sendMessage(String.format(I18nSupport.getInternationalisedString("Insufficient Permissions")));
 			}
 
@@ -281,10 +294,17 @@ public class CommandListener implements CommandExecutor {
 
 			final Craft craft = CraftManager.getInstance().getCraftByPlayerName(player.getName());
 
-			if (player.hasPermission("movecraft." + craft.getType().getCraftName() + ".rotate")) {
+			if (player.hasPermission("movecraft." + craft.getType().getCraftName() + ".rotate") && !craft.getMaintenance()) {
 				MovecraftLocation midPoint = getCraftMidPoint(craft);
 				CraftManager.getInstance().getCraftByPlayerName(player.getName()).rotate(Rotation.CLOCKWISE, midPoint);
-			} else {
+			}
+			//see if the craft is in maintenance, and let them see the time
+			else if (craft.getMaintenance())
+			{
+				long ticksMaintenance = ((craft.getLastMaintenanceTime() - System.currentTimeMillis())/1000)/60;
+				player.sendMessage( String.format( I18nSupport.getInternationalisedString( "Player - Craft is in maintenance mode.  Turn off Maintenance or wait ") + " %s minutes", ticksMaintenance ) );
+			}
+			else {
 				player.sendMessage(String.format(I18nSupport.getInternationalisedString("Insufficient Permissions")));
 			}
 
@@ -300,7 +320,7 @@ public class CommandListener implements CommandExecutor {
 			final Craft craft = CraftManager.getInstance().getCraftByPlayerName(player.getName());
 
 			if (player.hasPermission("movecraft." + craft.getType().getCraftName() + ".move")) {
-				if (craft.getType().getCanCruise()) {
+				if (craft.getType().getCanCruise() && !craft.getMaintenance()) {
 					if (args.length == 0) {
 						float yaw = player.getLocation().getYaw();
 						if (yaw >= 135 || yaw < -135) {
@@ -338,6 +358,10 @@ public class CommandListener implements CommandExecutor {
 						craft.setCruiseDirection((byte) 0x5);
 						craft.setCruising(true);
 					}
+				}
+				else if (craft.getMaintenance())
+				{
+					player.sendMessage(String.format(I18nSupport.getInternationalisedString("Craft is in Maintenance mode")));
 				}
 			} else {
 				player.sendMessage(String.format(I18nSupport.getInternationalisedString("Insufficient Permissions")));
@@ -386,7 +410,7 @@ public class CommandListener implements CommandExecutor {
 			return true;
 		}
 
-		if (cmd.getName().equalsIgnoreCase("contacts")) {
+		if (cmd.getName().equalsIgnoreCase("contacts") || cmd.getName().equalsIgnoreCase("radar")) {
 			if (CraftManager.getInstance().getCraftByPlayer(player) != null) {
 				Craft ccraft = CraftManager.getInstance().getCraftByPlayer(player);
 				boolean foundContact = false;
@@ -423,8 +447,17 @@ public class CommandListener implements CommandExecutor {
 						foundContact = true;
 						String notification = "Contact: ";
 						notification += tcraft.getType().getCraftName();
-						notification += " commanded by ";
-						notification += tcraft.getNotificationPlayer().getDisplayName();
+						
+						if(tcraft.getNotificationPlayer() == null)
+						{
+							notification += " currently not being commanded"; 
+						}
+						else
+						{
+							notification += " commanded by ";
+							notification += tcraft.getNotificationPlayer().getDisplayName();
+						}
+						
 						notification += ", size: ";
 						notification += tcraft.getOrigBlockCount();
 						notification += ", range: ";
@@ -454,7 +487,7 @@ public class CommandListener implements CommandExecutor {
 			}
 
 		}
-
+		
 		if (cmd.getName().equalsIgnoreCase("manOverBoard")) {
 			if (CraftManager.getInstance().getCraftByPlayerName(player.getName()) != null) {
 				Location telPoint = getCraftTeleportPoint(
@@ -527,7 +560,7 @@ public class CommandListener implements CommandExecutor {
 								"%s is preparing to siege %s! All players wishing to participate in the defense should head there immediately! Siege will begin in %d minutes",
 								player.getDisplayName(), foundSiegeName, Settings.SiegeDelay.get(foundSiegeName) / 60));
 						for (Player p : Bukkit.getOnlinePlayers()) {
-							p.playSound(p.getLocation(), Sound.WITHER_DEATH, 1, 0);
+							p.playSound(p.getLocation(), Sound.ENTITY_WITHER_DEATH, 1, 0);
 						}
 						final String taskPlayerDisplayName = player.getDisplayName();
 						final String taskPlayerName = player.getName();
@@ -541,7 +574,7 @@ public class CommandListener implements CommandExecutor {
 												taskPlayerDisplayName, taskSiegeName,
 												(Settings.SiegeDelay.get(taskSiegeName) / 60) / 4 * 3));
 								for (Player p : Bukkit.getOnlinePlayers()) {
-									p.playSound(p.getLocation(), Sound.WITHER_DEATH, 1, 0);
+									p.playSound(p.getLocation(), Sound.ENTITY_WITHER_DEATH, 1, 0);
 								}
 							}
 						}.runTaskLater(Movecraft.getInstance(), (20 * Settings.SiegeDelay.get(taskSiegeName) / 4 * 1));
@@ -554,7 +587,7 @@ public class CommandListener implements CommandExecutor {
 												taskPlayerDisplayName, taskSiegeName,
 												(Settings.SiegeDelay.get(taskSiegeName) / 60) / 4 * 2));
 								for (Player p : Bukkit.getOnlinePlayers()) {
-									p.playSound(p.getLocation(), Sound.WITHER_DEATH, 1, 0);
+									p.playSound(p.getLocation(), Sound.ENTITY_WITHER_DEATH, 1, 0);
 								}
 							}
 						}.runTaskLater(Movecraft.getInstance(), (20 * Settings.SiegeDelay.get(taskSiegeName) / 4 * 2));
@@ -567,7 +600,7 @@ public class CommandListener implements CommandExecutor {
 												taskPlayerDisplayName, taskSiegeName,
 												(Settings.SiegeDelay.get(taskSiegeName) / 60) / 4 * 1));
 								for (Player p : Bukkit.getOnlinePlayers()) {
-									p.playSound(p.getLocation(), Sound.WITHER_DEATH, 1, 0);
+									p.playSound(p.getLocation(), Sound.ENTITY_WITHER_DEATH, 1, 0);
 								}
 							}
 						}.runTaskLater(Movecraft.getInstance(), (20 * Settings.SiegeDelay.get(taskSiegeName) / 4 * 3));
@@ -580,7 +613,7 @@ public class CommandListener implements CommandExecutor {
 												taskSiegeName, taskPlayerDisplayName,
 												(Settings.SiegeDuration.get(taskSiegeName) / 60)));
 								for (Player p : Bukkit.getOnlinePlayers()) {
-									p.playSound(p.getLocation(), Sound.WITHER_DEATH, 1, 0);
+									p.playSound(p.getLocation(), Sound.ENTITY_WITHER_DEATH, 1, 0);
 								}
 								Movecraft.getInstance().currentSiegeName = taskSiegeName;
 								Movecraft.getInstance().currentSiegePlayer = taskPlayerName;

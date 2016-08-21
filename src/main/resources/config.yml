@@ -11,6 +11,7 @@ FireballLifespan: 6
 FireballPenetration: true
 DisableSpillProtection: false
 RequireCreatePerm: false
+ProtectPilotedCrafts: true
 TNTContactExplosives: true
 DisableCrates: false
 FadeWrecksAfter: 0
@@ -27,6 +28,7 @@ FreeRepair: false
 RepairTicksPerBlock: 10
 RepairMoneyPerBlock: 10
 MaintenanceAllow: false
+MaintenanceTime: 10 #minutes in maintenance
 BlockQueueChunkSize: 1000
 AllowCrewSigns: true
 SetHomeToCrewSign: false

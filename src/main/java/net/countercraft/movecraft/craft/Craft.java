@@ -54,7 +54,8 @@ public class Craft {
 	private double pilotLockedY;
 	private int origBlockCount;
 	private int lastBlockCount;
-	private long lastDamageTime; //Last time when the ship was caught with a different block count
+	private long lastDamageTime; //Last time when the craft was caught with a different block count
+	private long lastMaintenanceTime; //Time when the craft was put into maintenance mode
 	private double pilotLockedZ;
 	private Player notificationPlayer;
 	private String craftName;
@@ -360,6 +361,14 @@ public class Craft {
 	
 	public long getLastDamageTime() {
 		return lastDamageTime;
+	}
+	
+	public void setMaintenanceTime(long update) {
+		this.lastMaintenanceTime=update;
+	}
+	
+	public long getLastMaintenanceTime() {
+		return lastMaintenanceTime;
 	}
 	
 	public void setLastRightClick(long update) {

@@ -78,7 +78,8 @@ import java.util.logging.Level;
 import net.countercraft.movecraft.utils.ItemDropUpdateCommand;
 import net.countercraft.movecraft.utils.TownyUtils;
 import net.countercraft.movecraft.utils.WGCustomFlagsUtils;
-import net.minecraft.server.v1_9_R1.Chunk;
+import net.minecraft.server.v1_9_R2.Chunk;
+
 
 public class AsyncManager extends BukkitRunnable {
 	private static final AsyncManager instance = new AsyncManager();
@@ -619,6 +620,44 @@ public class AsyncManager extends BukkitRunnable {
 		}
 	}
 
+	public void processMaintenance() {
+		
+		for (World w : Bukkit.getWorlds()) {
+			if (w != null && CraftManager.getInstance().getCraftsInWorld(w) != null) {
+				//Check for ships in maintenance mode, and when it might expire.
+				for (Craft pcraft : CraftManager.getInstance().getCraftsInWorld(w)) {
+					//	first let's deal with maintenance updates.
+					if (pcraft != null && pcraft.getMaintenance())
+					{
+						long MaintenanceticksElapsed = (System.currentTimeMillis() - pcraft.getLastMaintenanceTime());
+						if (MaintenanceticksElapsed > Settings.MaintenanceTime) {
+							//no longer in maintenance mode
+							pcraft.setMaintenance(false);
+							//SC: TODO:  Given time, we could use the same detection processes to update the signs.  Meh.
+							//time to let them know maintenance has expired
+							Player notifyP = pcraft.getNotificationPlayer();
+							if (notifyP != null)
+								notifyP.sendMessage(
+										String.format(
+												I18nSupport.getInternationalisedString(
+														"Your craft is no longer in maintenance mode.  You may repilot! ")));
+							
+							
+							//log it to console
+							String pcraftName = "";
+							if(pcraft.getCraftname() != null)
+							{
+								pcraftName = pcraft.getCraftname();
+							}
+								
+							Movecraft.getInstance().getLogger().log(Level.INFO, "Maintenance mode expired for craft : " + pcraftName);
+						}
+					}
+				}
+			}
+		}
+	}
+	
 	public void processShipDetection() {
 		// check every few seconds for every craft to see if it should be
 		long ticksElapsed = (System.currentTimeMillis() - TimeTool.getInstance().getLastChunkCheck());
@@ -718,7 +757,7 @@ public class AsyncManager extends BukkitRunnable {
 				// be sinking
 				for (Craft pcraft : CraftManager.getInstance().getCraftsInWorld(w)) {
 					Set<TownBlock> townBlockSet = new HashSet<TownBlock>();
-					if (pcraft != null && pcraft.getSinking() == false) {
+					if (pcraft != null && pcraft.getSinking() == false && !pcraft.getMaintenance()) {
 						if (pcraft.getType().getSinkPercent() != 0.0 && pcraft.isNotProcessing()) {
 							long ticksElapsed = (System.currentTimeMillis() - pcraft.getLastBlockCheck()) / 50;
 
@@ -1214,14 +1253,14 @@ public class AsyncManager extends BukkitRunnable {
 											notification += " north.";
 
 										ccraft.getNotificationPlayer().sendMessage(notification);
-										w.playSound(ccraft.getNotificationPlayer().getLocation(), Sound.ANVIL_LAND,
+										w.playSound(ccraft.getNotificationPlayer().getLocation(), Sound.BLOCK_ANVIL_LAND,
 												1.0f, 2.0f);
 										final World sw = w;
 										final Player sp = ccraft.getNotificationPlayer();
 										BukkitTask replaysound = new BukkitRunnable() {
 											@Override
 											public void run() {
-												sw.playSound(sp.getLocation(), Sound.ANVIL_LAND, 10.0f, 2.0f);
+												sw.playSound(sp.getLocation(), Sound.BLOCK_ANVIL_LAND, 10.0f, 2.0f);
 											}
 										}.runTaskLater(Movecraft.getInstance(), (5));
 
@@ -1359,6 +1398,7 @@ public class AsyncManager extends BukkitRunnable {
 		processDetection();
 		processSiege();
 		processAlgorithmQueue();
+		processMaintenance();
 		if(Settings.ShipChunkDetection)
 			processShipDetection();
 	}

@@ -17,6 +17,9 @@ commands:
   contacts:
     description: reports on all crafts within detection range
     usage: /contacts
+  radar:
+    description: reports on all crafts within detection range
+    usage: /radar
   craftreport:
     description: reports on all active craft in the world you are in
     usage: /craftreport

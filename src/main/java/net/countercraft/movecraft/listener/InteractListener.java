@@ -35,7 +35,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
-import org.bukkit.craftbukkit.v1_9_R1.util.CraftMagicNumbers;
+import org.bukkit.craftbukkit.v1_9_R2.util.CraftMagicNumbers;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -157,7 +157,7 @@ public class InteractListener implements Listener {
 
 				if ( org.bukkit.ChatColor.stripColor(sign.getLine( 0 )).equals( "\\  ||  /" ) && org.bukkit.ChatColor.stripColor(sign.getLine( 1 )).equals( "==      ==" ) && org.bukkit.ChatColor.stripColor(sign.getLine( 2 )).equals( "/  ||  \\" ) ) {
 					Craft craft = CraftManager.getInstance().getCraftByPlayer( event.getPlayer() );
-					if ( craft != null ) {
+					if ( craft != null && craft.getMaintenance() == false) {
 						if ( event.getPlayer().hasPermission( "movecraft." + craft.getType().getCraftName() + ".rotate" ) ) {
 
 							Long time = timeMap.get( event.getPlayer() );
@@ -334,6 +334,12 @@ public class InteractListener implements Listener {
 							
 							
 						}
+						//see if the craft is in maintenance, and let them see the time
+						else if (existingCraft.getMaintenance() == true)
+						{
+							long ticksMaintenance = ((existingCraft.getLastMaintenanceTime() - System.currentTimeMillis())/1000)/60;
+							p.sendMessage( String.format( I18nSupport.getInternationalisedString( "Player - Craft is in maintenance mode.  Turn off Maintenance or wait ") + " %s minutes", ticksMaintenance ) );
+						}
 						else
 						{
 							if ( CraftManager.getInstance().getCraftByPlayer( event.getPlayer() ) == null ) {
@@ -375,7 +381,7 @@ public class InteractListener implements Listener {
 			event.setCancelled( true );
 		} else if ( org.bukkit.ChatColor.stripColor(sign.getLine( 0 )).equals( "\\  ||  /" ) && org.bukkit.ChatColor.stripColor(sign.getLine( 1 )).equals( "==      ==" ) && org.bukkit.ChatColor.stripColor(sign.getLine( 2 )).equals( "/  ||  \\" ) ) {
 			Craft craft = CraftManager.getInstance().getCraftByPlayer( event.getPlayer() );
-			if ( craft != null ) {
+			if ( craft != null && craft.getMaintenance() == false ) {
 				if ( event.getPlayer().hasPermission( "movecraft." + craft.getType().getCraftName() + ".rotate" ) ) {
 					Long time = timeMap.get( event.getPlayer() );
 					if ( time != null ) {
@@ -457,7 +463,7 @@ public class InteractListener implements Listener {
 		} else if ( org.bukkit.ChatColor.stripColor(sign.getLine( 0 )).equalsIgnoreCase( "Cruise: OFF")) {
 			if(CraftManager.getInstance().getCraftByPlayer( event.getPlayer() )!=null){
 				Craft c = CraftManager.getInstance().getCraftByPlayer(event.getPlayer());
-				if(c.getType().getCanCruise()) {
+				if(c.getType().getCanCruise() && !c.getMaintenance()) { //maintenance checks should never be needed to kill cruise
 					c.resetSigns(false, true, true);
 					sign.setLine( 0, "Cruise: ON" );
 					sign.update( true );
@@ -470,11 +476,15 @@ public class InteractListener implements Listener {
 						 CraftManager.getInstance().addReleaseTask(c);
 					}
 				}
+				else if (c.getMaintenance())
+				{
+					event.getPlayer().sendMessage( String.format( I18nSupport.getInternationalisedString( "Craft is in Maintenance Mode" ) ) );
+				}
 			}
 		} else if ( org.bukkit.ChatColor.stripColor(sign.getLine( 0 )).equalsIgnoreCase( "Ascend: OFF")) {
 			if(CraftManager.getInstance().getCraftByPlayer( event.getPlayer() )!=null){
 				Craft c = CraftManager.getInstance().getCraftByPlayer(event.getPlayer());
-				if(c.getType().getCanCruise()) {
+				if(c.getType().getCanCruise() && !c.getMaintenance()) {
 					c.resetSigns(true, false, true);
 					sign.setLine( 0, "Ascend: ON" );
 					sign.update( true );
@@ -487,11 +497,15 @@ public class InteractListener implements Listener {
 						 CraftManager.getInstance().addReleaseTask(c);
 					}
 				}
+				else if (c.getMaintenance())
+				{
+					event.getPlayer().sendMessage( String.format( I18nSupport.getInternationalisedString( "Craft is in Maintenance Mode" ) ) );
+				}
 			}
 		} else if ( org.bukkit.ChatColor.stripColor(sign.getLine( 0 )).equalsIgnoreCase( "Descend: OFF")) {
 			if(CraftManager.getInstance().getCraftByPlayer( event.getPlayer() )!=null){
 				Craft c = CraftManager.getInstance().getCraftByPlayer(event.getPlayer());
-				if(c.getType().getCanCruise()) {
+				if(c.getType().getCanCruise() && !c.getMaintenance()) {
 					c.resetSigns(true, true, false);
 					sign.setLine( 0, "Descend: ON" );
 					sign.update( true );
@@ -504,30 +518,56 @@ public class InteractListener implements Listener {
 						 CraftManager.getInstance().addReleaseTask(c);
 					}
 				}
+				else if (c.getMaintenance())
+				{
+					event.getPlayer().sendMessage( String.format( I18nSupport.getInternationalisedString( "Craft is in Maintenance Mode" ) ) );
+				}
 			}
 		} else if ( org.bukkit.ChatColor.stripColor(sign.getLine( 0 )).equalsIgnoreCase( "Cruise: ON")) {
-			if(CraftManager.getInstance().getCraftByPlayer( event.getPlayer() )!=null)
+			Craft c = CraftManager.getInstance().getCraftByPlayer( event.getPlayer() );
+			if(c !=null && !c.getMaintenance())
+			{
 				if(CraftManager.getInstance().getCraftByPlayer(event.getPlayer()).getType().getCanCruise()) {
 					sign.setLine( 0, "Cruise: OFF" );
 					sign.update( true );
 					CraftManager.getInstance().getCraftByPlayer(event.getPlayer()).setCruising(false);
 				}
+			}
+			else if (c.getMaintenance())
+			{
+				event.getPlayer().sendMessage( String.format( I18nSupport.getInternationalisedString( "Craft is in Maintenance Mode" ) ) );
+			}
 		} else if ( org.bukkit.ChatColor.stripColor(sign.getLine( 0 )).equalsIgnoreCase( "Ascend: ON")) {
-			if(CraftManager.getInstance().getCraftByPlayer( event.getPlayer() )!=null)
+			Craft c = CraftManager.getInstance().getCraftByPlayer(event.getPlayer());
+			if(c !=null && !c.getMaintenance())
+			{
 				if(CraftManager.getInstance().getCraftByPlayer(event.getPlayer()).getType().getCanCruise()) {
 					sign.setLine( 0, "Ascend: OFF" );
 					sign.update( true );
 					CraftManager.getInstance().getCraftByPlayer(event.getPlayer()).setCruising(false);
 				}
+			}
+			else if (c.getMaintenance())
+			{
+				event.getPlayer().sendMessage( String.format( I18nSupport.getInternationalisedString( "Craft is in Maintenance Mode" ) ) );
+			}
 		} else if ( org.bukkit.ChatColor.stripColor(sign.getLine( 0 )).equalsIgnoreCase( "Descend: ON")) {
-			if(CraftManager.getInstance().getCraftByPlayer( event.getPlayer() )!=null)
+			Craft c = CraftManager.getInstance().getCraftByPlayer(event.getPlayer());
+			if(c !=null && !c.getMaintenance())
+			{
 				if(CraftManager.getInstance().getCraftByPlayer(event.getPlayer()).getType().getCanCruise()) {
 					sign.setLine( 0, "Descend: OFF" );
 					sign.update( true );
 					CraftManager.getInstance().getCraftByPlayer(event.getPlayer()).setCruising(false);
 				}
+			}
+			else if (c.getMaintenance())
+			{
+				event.getPlayer().sendMessage( String.format( I18nSupport.getInternationalisedString( "Craft is in Maintenance Mode" ) ) );
+			}
 		} else if ( org.bukkit.ChatColor.stripColor(sign.getLine( 0 )).equalsIgnoreCase("Teleport:")) {
-			if(CraftManager.getInstance().getCraftByPlayer( event.getPlayer() )!=null) {
+			Craft c = CraftManager.getInstance().getCraftByPlayer(event.getPlayer());
+			if(c != null && !c.getMaintenance()) {
 				String[] numbers = org.bukkit.ChatColor.stripColor(sign.getLine( 1 )).split(",");
 				int tX=Integer.parseInt(numbers[0]);
 				int tY=Integer.parseInt(numbers[1]);
@@ -542,6 +582,57 @@ public class InteractListener implements Listener {
 					}
 				} else {
 					event.getPlayer().sendMessage( String.format( I18nSupport.getInternationalisedString( "Insufficient Permissions" ) ) );
+				}
+			}
+			else if (c.getMaintenance())
+			{
+				event.getPlayer().sendMessage( String.format( I18nSupport.getInternationalisedString( "Craft is in Maintenance Mode" ) ) );
+			}
+			//SC: Setting up Maintenance Mode
+		} else if ( org.bukkit.ChatColor.stripColor(sign.getLine( 0 )).equalsIgnoreCase( "Maintenance: OFF")) {
+			//IF the craft is piloted AND Maintenance mode is allowed AND the ship has not been damaged recently
+			if(CraftManager.getInstance().getCraftByPlayer( event.getPlayer() )!=null && Settings.MaintenanceAllow == true){
+				
+				Craft c = CraftManager.getInstance().getCraftByPlayer(event.getPlayer());
+				//Let's check the last damage time to make sure Maintenance mode is ok.
+				long ticksElapsed = (System.currentTimeMillis() - c.getLastDamageTime());
+				if (!(Settings.LastDamageRequirement > ticksElapsed)) {
+
+					//if(c.getType().getCanCruise()) {
+					c.resetSigns(true, true, false);
+					sign.setLine( 0, "Maintenance: ON" );
+					sign.update( true );
+					
+					//Put the craft in maintenance mode
+					CraftManager.getInstance().getCraftByPlayer(event.getPlayer()).setMaintenance(true);
+					CraftManager.getInstance().getCraftByPlayer(event.getPlayer()).setMaintenanceTime(System.currentTimeMillis());
+					Movecraft.getInstance().getLogger().log(Level.INFO, event.getPlayer().getName() + " has entered into Maintenance mode Craft: " +  CraftManager.getInstance().getCraftByPlayer(event.getPlayer()).getCraftname());
+				}
+				else
+				{
+					//craft is damaged.  No maintenance for you!
+					p.sendMessage( String.format( I18nSupport.getInternationalisedString( "Player - Craft is damaged and cannot be placed in maintenance mode." ) ) );
+				}
+				
+			}
+		} else if ( org.bukkit.ChatColor.stripColor(sign.getLine( 0 )).equalsIgnoreCase( "Maintenance: ON")) {
+			Craft c = CraftManager.getInstance().getCraftByPlayer( event.getPlayer() );
+			if(c!=null)
+			{
+				//if the sign should say off, due to an expired maintenance, just change it
+				if(!c.getMaintenance())
+				{
+					sign.setLine( 0, "Maintenance: OFF" );
+					sign.update( true );
+					
+				}
+				else {
+					sign.setLine( 0, "Maintenance: OFF" );
+					sign.update( true );
+					//let's go ahead and release the craft in case we've ruined it
+					CraftManager.getInstance().fullremoveCraft(CraftManager.getInstance().getCraftByPlayer(event.getPlayer()));
+					CraftManager.getInstance().getCraftByPlayer(event.getPlayer()).setMaintenance(false);
+					p.sendMessage( String.format( I18nSupport.getInternationalisedString( "Player - Craft has been released from maintenance" ) ) );
 				}
 			}
 		} else if ( org.bukkit.ChatColor.stripColor(sign.getLine( 0 )).equalsIgnoreCase( "Release")) {
@@ -597,12 +688,13 @@ public class InteractListener implements Listener {
 				}
 			}
 		} else  if ( org.bukkit.ChatColor.stripColor(sign.getLine( 0 )).equalsIgnoreCase("RMove:")) {
-			if(CraftManager.getInstance().getCraftByPlayer( event.getPlayer() )!=null) {
+			Craft craft=CraftManager.getInstance().getCraftByPlayer( event.getPlayer() );
+			if(craft !=null && craft.getMaintenance() == false) {
 				Long time = timeMap.get( event.getPlayer() );
 				if ( time != null ) {
 					long ticksElapsed = ( System.currentTimeMillis() - time ) / 50;
 
-					Craft craft=CraftManager.getInstance().getCraftByPlayer( event.getPlayer() );
+					//SC temp: Craft craft=CraftManager.getInstance().getCraftByPlayer( event.getPlayer() );
 					// if the craft should go slower underwater, make time pass more slowly there
 					if(craft.getType().getHalfSpeedUnderwater() && craft.getMinY()<craft.getW().getSeaLevel())
 						ticksElapsed=ticksElapsed>>1;
@@ -691,7 +783,7 @@ public class InteractListener implements Listener {
 		if ( event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK ) {
 			Craft craft = CraftManager.getInstance().getCraftByPlayer( event.getPlayer() );
 			
-			if ( event.getItem() != null && event.getItem().getTypeId()==Settings.PilotTool ) {
+			if ( event.getItem() != null && event.getItem().getTypeId()==Settings.PilotTool && craft.getMaintenance() == false ) {
 				event.setCancelled(true);
 				if ( craft != null ) {
 					Long time = timeMap.get( event.getPlayer() );
@@ -782,7 +874,7 @@ public class InteractListener implements Listener {
 		if ( event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK ) {
 			if ( event.getItem() != null && event.getItem().getTypeId()==Settings.PilotTool ) {
 				Craft craft = CraftManager.getInstance().getCraftByPlayer( event.getPlayer() );
-				if( craft!=null ) {
+				if( craft!=null && craft.getMaintenance() == false ) {
 					if ( craft.getPilotLocked()==false) {
 						if ( event.getPlayer().hasPermission( "movecraft." + craft.getType().getCraftName() + ".move" ) && craft.getType().getCanDirectControl() ) {
 							craft.setPilotLocked(true);

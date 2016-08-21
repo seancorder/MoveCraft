@@ -40,6 +40,7 @@ public class Settings {
 	public static boolean WorldGuardBlockMoveOnBuildPerm = false;
 	public static boolean WorldGuardBlockSinkOnPVPPerm = false;
 	public static boolean DisableCrates = false;
+	public static boolean ProtectPilotedCrafts = false;
 	public static boolean DisableSpillProtection = false;
 	public static boolean RequireCreatePerm = false;
 	public static boolean TNTContactExplosives = true;
@@ -54,6 +55,7 @@ public class Settings {
 	public static int BlockQueueChunkSize = 1000;
 	public static double RepairMoneyPerBlock = 0.0;
 	public static boolean MaintenanceAllow = true; //SC:  Added in, not sure how I'm going to implement yet.
+	public static double MaintenanceTime = 10.0;
 	public static boolean FireballPenetration = true;
 	public static boolean AllowCrewSigns = true;
 	public static boolean SetHomeToCrewSign = true;
